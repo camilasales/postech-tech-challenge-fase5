@@ -1,0 +1,27 @@
+{
+  "users": [
+    {
+      "name": "teste",
+      "email": "teste@teste.com",
+      "password": "teste1234",
+      "id": 1
+    }
+  ],
+  "reminders": [
+    {
+      "userId": 1,
+      "description": "teste",
+      "scheduledAt": "2022-02-02T14:11:00.000Z",
+      "completed": true,
+      "commentCount": 0,
+      "attachmentCount": 0,
+      "tag": {
+        "name": "Geral",
+        "color": "#8B5CF6"
+      },
+      "createdAt": "2026-04-06T19:16:29.879Z",
+      "id": 1,
+      "updatedAt": "2026-04-06T19:17:09.239Z"
+    }
+  ]
+}
