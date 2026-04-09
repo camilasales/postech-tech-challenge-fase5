@@ -14,7 +14,6 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SidebarLayout, SIDEBAR_BREAKPOINT } from '@/components/SidebarLayout';
 import { ReminderFormModal } from '@/components/ReminderFormModal';
-import { PersonalizationPanel } from '@/components/PersonalizationPanel';
 import { useRemindersContext } from '@/context/RemindersContext';
 import type { AppTheme } from '@/context/PersonalizationContext';
 import { usePersonalization } from '@/context/PersonalizationContext';
@@ -38,7 +37,6 @@ export function TaskListScreen() {
   const { width: windowWidth } = useWindowDimensions();
   const queryClient = useQueryClient();
   const [showFilters, setShowFilters] = useState(false);
-  const [showPersonalization, setShowPersonalization] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [editingReminderId, setEditingReminderId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
@@ -232,25 +230,12 @@ export function TaskListScreen() {
       onSignOut={handleSignOut}
       searchConfig={searchConfig}
       topBarRight={
-        <View style={styles.topBarActions}>
-          <TouchableOpacity
-            onPress={() => setShowPersonalization(true)}
-            style={styles.iconBtn}
-            accessibilityLabel="Personalização">
-            <Ionicons name="settings-outline" size={theme.icon(24)} color={c.text} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowFilters(true)} style={styles.iconBtn}>
-            <Ionicons name="funnel-outline" size={theme.icon(24)} color={c.text} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={() => setShowFilters(true)} style={styles.iconBtn}>
+          <Ionicons name="funnel-outline" size={theme.icon(24)} color={c.text} />
+        </TouchableOpacity>
       }
       postContent={
         <>
-          <PersonalizationPanel
-            visible={showPersonalization}
-            onClose={() => setShowPersonalization(false)}
-          />
-
           {showFab ? (
             <TouchableOpacity
               style={[
@@ -388,11 +373,6 @@ function createTaskListStyles(theme: AppTheme) {
   return StyleSheet.create({
     mainInner: {
       flex: 1,
-    },
-    topBarActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.space(2),
     },
     iconBtn: {
       padding: theme.space(6),

@@ -23,20 +23,19 @@ export const SIDEBAR_BREAKPOINT = 900;
 
 const SIDEBAR_W = 248;
 
+export type SidebarNavKey = 'tasks' | 'profile' | 'settings';
+
 type NavItem = {
-  key: string;
+  key: SidebarNavKey;
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
-  href?: '/';
-  soon?: boolean;
+  href: '/' | '/profile' | '/settings';
 };
 
 const NAV_ITEMS: NavItem[] = [
   { key: 'tasks', label: 'Tarefas', icon: 'checkbox-outline', href: '/' },
-  { key: 'people', label: 'Pessoas', icon: 'people-outline', soon: true },
-  { key: 'reports', label: 'Relatórios', icon: 'bar-chart-outline', soon: true },
-  { key: 'billing', label: 'Cobrança', icon: 'card-outline', soon: true },
-  { key: 'integrations', label: 'Integrações', icon: 'extension-puzzle-outline', soon: true },
+  { key: 'profile', label: 'Perfil', icon: 'person-outline', href: '/profile' },
+  { key: 'settings', label: 'Configuração', icon: 'settings-outline', href: '/settings' },
 ];
 
 export type SidebarLayoutSearchConfig = {
@@ -48,7 +47,7 @@ export type SidebarLayoutSearchConfig = {
 
 type SidebarLayoutProps = {
   children: React.ReactNode;
-  activeNavKey: 'tasks';
+  activeNavKey: SidebarNavKey;
   searchConfig: SidebarLayoutSearchConfig | null;
   topBarRight?: React.ReactNode;
   desktopTopBarLeft: 'back' | 'empty';
@@ -78,8 +77,7 @@ export function SidebarLayout({
 
   const onNavPress = useCallback(
     (item: NavItem) => {
-      if (item.soon) return;
-      if (item.href === '/') router.push('/');
+      router.push(item.href);
       setMobileMenuOpen(false);
     },
     [router]
@@ -131,7 +129,6 @@ export function SidebarLayout({
                 style={styles.navIcon}
               />
               <Text style={[styles.navLabel, active && styles.navLabelActive]}>{item.label}</Text>
-              {item.soon ? <Text style={styles.navSoon}>em breve</Text> : null}
             </TouchableOpacity>
           );
         })}
@@ -328,10 +325,6 @@ function createStyles(theme: AppTheme) {
     navLabelActive: {
       color: c.blue,
       fontWeight: '600',
-    },
-    navSoon: {
-      fontSize: theme.font(11),
-      color: c.placeholder,
     },
     sidebarRail: {
       width: theme.space(44),

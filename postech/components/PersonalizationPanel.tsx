@@ -17,11 +17,6 @@ import {
   type SpacingPreset,
 } from '@/context/PersonalizationContext';
 
-type PersonalizationPanelProps = {
-  visible: boolean;
-  onClose: () => void;
-};
-
 const FONT_OPTIONS: { key: FontSizePreset; label: string }[] = [
   { key: 'small', label: 'Pequeno' },
   { key: 'medium', label: 'Médio' },
@@ -39,99 +34,114 @@ const SPACING_OPTIONS: { key: SpacingPreset; label: string }[] = [
   { key: 'relaxed', label: 'Amplo' },
 ];
 
-export function PersonalizationPanel({ visible, onClose }: PersonalizationPanelProps) {
+/** Controles de personalização (fonte, contraste, espaçamento) para uso em página ou modal. */
+export function PersonalizationForm() {
   const { settings, setFontSize, setContrast, setSpacing, resetToDefaults, theme } =
     usePersonalization();
+  const formStyles = useMemo(() => createFormStyles(theme), [theme]);
 
-  const panelStyles = useMemo(() => createPanelStyles(theme), [theme]);
+  return (
+    <>
+      <Text style={formStyles.sectionLabel}>Tamanho da fonte</Text>
+      <View style={formStyles.segmentRow}>
+        {FONT_OPTIONS.map((opt) => {
+          const active = settings.fontSize === opt.key;
+          return (
+            <TouchableOpacity
+              key={opt.key}
+              style={[formStyles.segment, active && formStyles.segmentActive]}
+              onPress={() => setFontSize(opt.key)}
+              activeOpacity={0.85}>
+              <Text style={[formStyles.segmentText, active && formStyles.segmentTextActive]}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <Text style={[formStyles.sectionLabel, formStyles.sectionLabelSpaced]}>Contraste</Text>
+      {CONTRAST_OPTIONS.map((opt) => {
+        const active = settings.contrast === opt.key;
+        return (
+          <TouchableOpacity
+            key={opt.key}
+            style={[formStyles.optionCard, active && formStyles.optionCardActive]}
+            onPress={() => setContrast(opt.key)}
+            activeOpacity={0.85}>
+            <View style={formStyles.optionCardInner}>
+              <Text style={formStyles.optionTitle}>{opt.label}</Text>
+              <Text style={formStyles.optionHint}>{opt.hint}</Text>
+            </View>
+            {active ? (
+              <Ionicons name="checkmark-circle" size={theme.icon(22)} color={theme.colors.blue} />
+            ) : (
+              <View style={formStyles.radioOuter}>
+                <View style={formStyles.radioInner} />
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
+
+      <Text style={[formStyles.sectionLabel, formStyles.sectionLabelSpaced]}>
+        Espaçamento entre elementos
+      </Text>
+      <View style={formStyles.segmentRow}>
+        {SPACING_OPTIONS.map((opt) => {
+          const active = settings.spacing === opt.key;
+          return (
+            <TouchableOpacity
+              key={opt.key}
+              style={[formStyles.segment, active && formStyles.segmentActive]}
+              onPress={() => setSpacing(opt.key)}
+              activeOpacity={0.85}>
+              <Text style={[formStyles.segmentText, active && formStyles.segmentTextActive]}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <TouchableOpacity style={formStyles.resetBtn} onPress={resetToDefaults}>
+        <Text style={formStyles.resetBtnText}>Restaurar padrões</Text>
+      </TouchableOpacity>
+    </>
+  );
+}
+
+type PersonalizationPanelProps = {
+  visible: boolean;
+  onClose: () => void;
+};
+
+export function PersonalizationPanel({ visible, onClose }: PersonalizationPanelProps) {
+  const { theme } = usePersonalization();
+  const modalStyles = useMemo(() => createModalStyles(theme), [theme]);
+  const c = theme.colors;
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={panelStyles.overlay}>
-        <Pressable style={panelStyles.scrim} onPress={onClose} />
-        <View style={panelStyles.sheet}>
-          <View style={panelStyles.header}>
+      <View style={modalStyles.overlay}>
+        <Pressable style={modalStyles.scrim} onPress={onClose} />
+        <View style={modalStyles.sheet}>
+          <View style={modalStyles.header}>
             <View>
-              <Text style={panelStyles.title}>Personalização</Text>
-              <Text style={panelStyles.subtitle}>Ajuste texto, contraste e espaçamento</Text>
+              <Text style={modalStyles.title}>Personalização</Text>
+              <Text style={modalStyles.subtitle}>Ajuste texto, contraste e espaçamento</Text>
             </View>
             <TouchableOpacity onPress={onClose} hitSlop={12} accessibilityLabel="Fechar">
-              <Ionicons name="close" size={theme.icon(26)} color={theme.colors.text} />
+              <Ionicons name="close" size={theme.icon(26)} color={c.text} />
             </TouchableOpacity>
           </View>
 
           <ScrollView
-            style={panelStyles.scroll}
-            contentContainerStyle={panelStyles.scrollContent}
+            style={modalStyles.scroll}
+            contentContainerStyle={modalStyles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
-            <Text style={panelStyles.sectionLabel}>Tamanho da fonte</Text>
-            <View style={panelStyles.segmentRow}>
-              {FONT_OPTIONS.map((opt) => {
-                const active = settings.fontSize === opt.key;
-                return (
-                  <TouchableOpacity
-                    key={opt.key}
-                    style={[panelStyles.segment, active && panelStyles.segmentActive]}
-                    onPress={() => setFontSize(opt.key)}
-                    activeOpacity={0.85}>
-                    <Text style={[panelStyles.segmentText, active && panelStyles.segmentTextActive]}>
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <Text style={[panelStyles.sectionLabel, panelStyles.sectionLabelSpaced]}>
-              Contraste
-            </Text>
-            {CONTRAST_OPTIONS.map((opt) => {
-              const active = settings.contrast === opt.key;
-              return (
-                <TouchableOpacity
-                  key={opt.key}
-                  style={[panelStyles.optionCard, active && panelStyles.optionCardActive]}
-                  onPress={() => setContrast(opt.key)}
-                  activeOpacity={0.85}>
-                  <View style={panelStyles.optionCardInner}>
-                    <Text style={panelStyles.optionTitle}>{opt.label}</Text>
-                    <Text style={panelStyles.optionHint}>{opt.hint}</Text>
-                  </View>
-                  {active ? (
-                    <Ionicons name="checkmark-circle" size={theme.icon(22)} color={theme.colors.blue} />
-                  ) : (
-                    <View style={panelStyles.radioOuter}>
-                      <View style={panelStyles.radioInner} />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-
-            <Text style={[panelStyles.sectionLabel, panelStyles.sectionLabelSpaced]}>
-              Espaçamento entre elementos
-            </Text>
-            <View style={panelStyles.segmentRow}>
-              {SPACING_OPTIONS.map((opt) => {
-                const active = settings.spacing === opt.key;
-                return (
-                  <TouchableOpacity
-                    key={opt.key}
-                    style={[panelStyles.segment, active && panelStyles.segmentActive]}
-                    onPress={() => setSpacing(opt.key)}
-                    activeOpacity={0.85}>
-                    <Text style={[panelStyles.segmentText, active && panelStyles.segmentTextActive]}>
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <TouchableOpacity style={panelStyles.resetBtn} onPress={resetToDefaults}>
-              <Text style={panelStyles.resetBtnText}>Restaurar padrões</Text>
-            </TouchableOpacity>
+            <PersonalizationForm />
           </ScrollView>
         </View>
       </View>
@@ -139,7 +149,7 @@ export function PersonalizationPanel({ visible, onClose }: PersonalizationPanelP
   );
 }
 
-function createPanelStyles(theme: AppTheme) {
+function createModalStyles(theme: AppTheme) {
   const c = theme.colors;
   return StyleSheet.create({
     overlay: {
@@ -187,6 +197,12 @@ function createPanelStyles(theme: AppTheme) {
       paddingTop: theme.space(16),
       paddingBottom: theme.space(28),
     },
+  });
+}
+
+function createFormStyles(theme: AppTheme) {
+  const c = theme.colors;
+  return StyleSheet.create({
     sectionLabel: {
       fontSize: theme.font(13),
       fontWeight: '600',
