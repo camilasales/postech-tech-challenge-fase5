@@ -31,7 +31,9 @@ export type ThemeColors = {
   tomorrow: string;
   placeholder: string;
   chipActiveBg: string;
+  navAccent: string;
   navActiveBg: string;
+  navInactive: string;
   errorBannerBg: string;
   errorBannerBorder: string;
   errorBannerText: string;
@@ -89,7 +91,9 @@ function buildTheme(settings: PersonalizationSettings): AppTheme {
           tomorrow: '#C2410C',
           placeholder: '#374151',
           chipActiveBg: '#DBEAFE',
-          navActiveBg: '#BFDBFE',
+          navAccent: '#5B21B6',
+          navActiveBg: '#EDE9FE',
+          navInactive: '#1F2937',
           errorBannerBg: '#FEF9C3',
           errorBannerBorder: '#CA8A04',
           errorBannerText: '#713F12',
@@ -109,7 +113,9 @@ function buildTheme(settings: PersonalizationSettings): AppTheme {
           tomorrow: '#EA580C',
           placeholder: '#9CA3AF',
           chipActiveBg: '#EFF6FF',
-          navActiveBg: '#EFF6FF',
+          navAccent: '#7C3AED',
+          navActiveBg: '#F5F3FF',
+          navInactive: '#4B5563',
           errorBannerBg: '#FEF3C7',
           errorBannerBorder: '#FCD34D',
           errorBannerText: '#92400E',

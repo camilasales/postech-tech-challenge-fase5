@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { SidebarLayout, SIDEBAR_BREAKPOINT } from '@/components/SidebarLayout';
+import { SidebarLayout, SIDEBAR_BREAKPOINT, getBottomNavHeight } from '@/components/SidebarLayout';
 import { ReminderFormModal } from '@/components/ReminderFormModal';
 import { useRemindersContext } from '@/context/RemindersContext';
 import type { AppTheme } from '@/context/PersonalizationContext';
@@ -243,8 +243,11 @@ export function TaskListScreen() {
                 {
                   bottom:
                     Platform.OS === 'ios' || Platform.OS === 'android'
-                      ? Math.max(insets.bottom, 16) + 8
-                      : 24,
+                      ? getBottomNavHeight(
+                          theme,
+                          Platform.OS === 'android' ? insets.bottom : 0
+                        ) + 8
+                      : getBottomNavHeight(theme) + 24,
                 },
               ]}
               onPress={() => openReminderModal()}
