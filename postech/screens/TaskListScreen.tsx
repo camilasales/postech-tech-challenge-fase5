@@ -14,7 +14,10 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SidebarLayout, SIDEBAR_BREAKPOINT } from '@/components/SidebarLayout';
 import { ReminderFormModal } from '@/components/ReminderFormModal';
+import { PersonalizationPanel } from '@/components/PersonalizationPanel';
 import { useRemindersContext } from '@/context/RemindersContext';
+import type { AppTheme } from '@/context/PersonalizationContext';
+import { usePersonalization } from '@/context/PersonalizationContext';
 import { Reminder, ReminderStatusFilter } from '@/types/reminder';
 import { FlashList } from '@shopify/flash-list';
 import { Subject } from 'rxjs';
@@ -23,16 +26,11 @@ import { patchReminderCompleted } from '@/services/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 
-const BLUE = '#2563EB';
-const BORDER = '#E5E7EB';
-const BG_PAGE = '#F9FAFB';
-const CARD = '#FFFFFF';
-const CARD_DONE = '#F3F4F6';
-const TEXT = '#111827';
-const MUTED = '#6B7280';
-const TOMORROW = '#EA580C';
-
 export function TaskListScreen() {
+  const { theme } = usePersonalization();
+  const styles = useMemo(() => createTaskListStyles(theme), [theme]);
+  const c = theme.colors;
+
   const router = useRouter();
   const { signOutUser } = useAuth();
   const params = useLocalSearchParams();
@@ -40,6 +38,7 @@ export function TaskListScreen() {
   const { width: windowWidth } = useWindowDimensions();
   const queryClient = useQueryClient();
   const [showFilters, setShowFilters] = useState(false);
+  const [showPersonalization, setShowPersonalization] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
   const [editingReminderId, setEditingReminderId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
@@ -144,7 +143,9 @@ export function TaskListScreen() {
             onPress={() => toggleMutation.mutate({ id: item.id, completed: !item.completed })}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <View style={[styles.checkbox, item.completed && styles.checkboxChecked]}>
-              {item.completed ? <Ionicons name="checkmark" size={16} color="#fff" /> : null}
+              {item.completed ? (
+                <Ionicons name="checkmark" size={theme.icon(16)} color="#fff" />
+              ) : null}
             </View>
           </TouchableOpacity>
 
@@ -157,7 +158,7 @@ export function TaskListScreen() {
 
             <View style={styles.metaRow}>
               <View style={styles.metaItem}>
-                <Ionicons name="calendar-outline" size={14} color={MUTED} />
+                <Ionicons name="calendar-outline" size={theme.icon(14)} color={c.muted} />
                 <Text
                   style={[
                     styles.metaText,
@@ -170,12 +171,12 @@ export function TaskListScreen() {
               </View>
 
               <View style={styles.metaItem}>
-                <Ionicons name="chatbubble-outline" size={14} color={MUTED} />
+                <Ionicons name="chatbubble-outline" size={theme.icon(14)} color={c.muted} />
                 <Text style={styles.metaTextMuted}>{item.commentCount}</Text>
               </View>
 
               <View style={styles.metaItem}>
-                <Ionicons name="attach-outline" size={14} color={MUTED} />
+                <Ionicons name="attach-outline" size={theme.icon(14)} color={c.muted} />
                 <Text style={styles.metaTextMuted}>{item.attachmentCount}</Text>
               </View>
 
@@ -192,17 +193,17 @@ export function TaskListScreen() {
             style={styles.editIconBtn}
             onPress={() => openReminderModal(item.id)}
             hitSlop={12}>
-            <Ionicons name="create-outline" size={20} color={MUTED} />
+            <Ionicons name="create-outline" size={theme.icon(20)} color={c.muted} />
           </TouchableOpacity>
         </View>
       );
     },
-    [toggleMutation, openReminderModal]
+    [toggleMutation, openReminderModal, styles, theme, c.muted]
   );
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Ionicons name="clipboard-outline" size={56} color="#D1D5DB" />
+      <Ionicons name="clipboard-outline" size={theme.icon(56)} color={c.border} />
       <Text style={styles.emptyTitle}>Nenhuma tarefa</Text>
       <Text style={styles.emptySub}>
         Crie uma nova tarefa ou ajuste os filtros e a busca.
@@ -231,12 +232,25 @@ export function TaskListScreen() {
       onSignOut={handleSignOut}
       searchConfig={searchConfig}
       topBarRight={
-        <TouchableOpacity onPress={() => setShowFilters(true)} style={styles.iconBtn}>
-          <Ionicons name="options-outline" size={24} color={TEXT} />
-        </TouchableOpacity>
+        <View style={styles.topBarActions}>
+          <TouchableOpacity
+            onPress={() => setShowPersonalization(true)}
+            style={styles.iconBtn}
+            accessibilityLabel="Personalização">
+            <Ionicons name="settings-outline" size={theme.icon(24)} color={c.text} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowFilters(true)} style={styles.iconBtn}>
+            <Ionicons name="funnel-outline" size={theme.icon(24)} color={c.text} />
+          </TouchableOpacity>
+        </View>
       }
       postContent={
         <>
+          <PersonalizationPanel
+            visible={showPersonalization}
+            onClose={() => setShowPersonalization(false)}
+          />
+
           {showFab ? (
             <TouchableOpacity
               style={[
@@ -250,7 +264,7 @@ export function TaskListScreen() {
               ]}
               onPress={() => openReminderModal()}
               activeOpacity={0.9}>
-              <Ionicons name="add" size={28} color="#fff" />
+              <Ionicons name="add" size={theme.icon(28)} color="#fff" />
             </TouchableOpacity>
           ) : null}
 
@@ -270,7 +284,7 @@ export function TaskListScreen() {
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Filtros</Text>
                   <TouchableOpacity onPress={() => setShowFilters(false)}>
-                    <Ionicons name="close" size={26} color={TEXT} />
+                    <Ionicons name="close" size={theme.icon(26)} color={c.text} />
                   </TouchableOpacity>
                 </View>
                 <View style={styles.modalBody}>
@@ -308,7 +322,7 @@ export function TaskListScreen() {
 
           {toggleMutation.isPending ? (
             <View style={styles.inlineLoading} pointerEvents="none">
-              <ActivityIndicator size="small" color={BLUE} />
+              <ActivityIndicator size="small" color={c.blue} />
             </View>
           ) : null}
         </>
@@ -330,18 +344,18 @@ export function TaskListScreen() {
             style={styles.btnPrimary}
             onPress={() => openReminderModal()}
             activeOpacity={0.85}>
-            <Ionicons name="add" size={20} color="#fff" />
+            <Ionicons name="add" size={theme.icon(20)} color="#fff" />
             <Text style={styles.btnPrimaryText}>Nova tarefa</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.btnSecondary} onPress={() => setShowFilters(true)}>
-            <Ionicons name="funnel-outline" size={18} color={TEXT} />
+            <Ionicons name="funnel-outline" size={theme.icon(18)} color={c.text} />
             <Text style={styles.btnSecondaryText}>Filtros</Text>
           </TouchableOpacity>
         </View>
 
         {contextError ? (
           <View style={styles.errorBanner}>
-            <Ionicons name="cloud-offline-outline" size={22} color="#B45309" />
+            <Ionicons name="cloud-offline-outline" size={theme.icon(22)} color={c.errorBannerText} />
             <Text style={styles.errorBannerText}>{contextError}</Text>
           </View>
         ) : null}
@@ -369,337 +383,345 @@ export function TaskListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  mainInner: {
-    flex: 1,
-  },
-  iconBtn: {
-    padding: 6,
-  },
-  titleBlock: {
-    marginBottom: 16,
-  },
-  pageTitle: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: TEXT,
-    letterSpacing: -0.5,
-  },
-  pageSubtitle: {
-    fontSize: 14,
-    color: MUTED,
-    marginTop: 6,
-    lineHeight: 20,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 16,
-  },
-  btnPrimary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: BLUE,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 8,
-  },
-  btnPrimaryText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  btnSecondary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: CARD,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: BORDER,
-  },
-  btnSecondaryText: {
-    color: TEXT,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#FEF3C7',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#FCD34D',
-  },
-  errorBannerText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#92400E',
-  },
-  listHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    marginBottom: 12,
-  },
-  listHeaderTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: TEXT,
-  },
-  listHeaderCount: {
-    fontSize: 13,
-    color: MUTED,
-  },
-  listWrap: {
-    flex: 1,
-    minHeight: 120,
-  },
-  listContent: {
-    paddingBottom: 96,
-  },
-  taskCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: CARD,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: BORDER,
-    padding: 16,
-    marginBottom: 12,
-    ...(Platform.OS === 'web'
-      ? { boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }
-      : {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.05,
-          shadowRadius: 2,
-          elevation: 1,
-        }),
-  },
-  taskCardDone: {
-    backgroundColor: CARD_DONE,
-    borderColor: '#E5E7EB',
-  },
-  checkboxTouch: {
-    marginRight: 14,
-    marginTop: 2,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: '#D1D5DB',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: CARD,
-  },
-  checkboxChecked: {
-    backgroundColor: BLUE,
-    borderColor: BLUE,
-  },
-  taskMain: {
-    flex: 1,
-    minWidth: 0,
-  },
-  taskTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: TEXT,
-    marginBottom: 10,
-    lineHeight: 22,
-  },
-  taskTitleDone: {
-    color: MUTED,
-    textDecorationLine: 'line-through',
-    fontWeight: '500',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: 14,
-    rowGap: 8,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  metaText: {
-    fontSize: 13,
-    color: TEXT,
-    fontWeight: '500',
-  },
-  metaTextHighlight: {
-    color: TOMORROW,
-    fontWeight: '600',
-  },
-  metaDot: {
-    fontSize: 13,
-    color: MUTED,
-    marginHorizontal: 2,
-  },
-  metaTextMuted: {
-    fontSize: 13,
-    color: MUTED,
-  },
-  tagPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    maxWidth: 140,
-  },
-  tagDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  tagName: {
-    fontSize: 13,
-    color: MUTED,
-    fontWeight: '500',
-    flexShrink: 1,
-  },
-  editIconBtn: {
-    padding: 4,
-    marginLeft: 4,
-    marginTop: -2,
-  },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: BLUE,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    zIndex: 50,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 48,
-    paddingHorizontal: 24,
-  },
-  emptyTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: MUTED,
-    marginTop: 16,
-  },
-  emptySub: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 20,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: CARD,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingBottom: 24,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: TEXT,
-  },
-  modalBody: {
-    padding: 20,
-  },
-  filterLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: TEXT,
-    marginBottom: 12,
-  },
-  filterChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  chip: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: BORDER,
-    backgroundColor: BG_PAGE,
-  },
-  chipActive: {
-    borderColor: BLUE,
-    backgroundColor: '#EFF6FF',
-  },
-  chipText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: MUTED,
-  },
-  chipTextActive: {
-    color: BLUE,
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  modalBtnGhost: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: BORDER,
-    alignItems: 'center',
-  },
-  modalBtnGhostText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: MUTED,
-  },
-  modalBtnPrimary: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
-    backgroundColor: BLUE,
-    alignItems: 'center',
-  },
-  modalBtnPrimaryText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  inlineLoading: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(249,250,251,0.5)',
-  },
-});
+function createTaskListStyles(theme: AppTheme) {
+  const c = theme.colors;
+  return StyleSheet.create({
+    mainInner: {
+      flex: 1,
+    },
+    topBarActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.space(2),
+    },
+    iconBtn: {
+      padding: theme.space(6),
+    },
+    titleBlock: {
+      marginBottom: theme.space(16),
+    },
+    pageTitle: {
+      fontSize: theme.font(32),
+      fontWeight: '700',
+      color: c.text,
+      letterSpacing: -0.5,
+    },
+    pageSubtitle: {
+      fontSize: theme.font(14),
+      color: c.muted,
+      marginTop: theme.space(6),
+      lineHeight: theme.font(20),
+    },
+    actionRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.space(12),
+      marginBottom: theme.space(16),
+    },
+    btnPrimary: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.space(8),
+      backgroundColor: c.blue,
+      paddingVertical: theme.space(12),
+      paddingHorizontal: theme.space(18),
+      borderRadius: theme.space(8),
+    },
+    btnPrimaryText: {
+      color: '#fff',
+      fontSize: theme.font(15),
+      fontWeight: '600',
+    },
+    btnSecondary: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.space(8),
+      backgroundColor: c.card,
+      paddingVertical: theme.space(12),
+      paddingHorizontal: theme.space(18),
+      borderRadius: theme.space(8),
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    btnSecondaryText: {
+      color: c.text,
+      fontSize: theme.font(15),
+      fontWeight: '600',
+    },
+    errorBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.space(10),
+      backgroundColor: c.errorBannerBg,
+      padding: theme.space(12),
+      borderRadius: theme.space(8),
+      marginBottom: theme.space(12),
+      borderWidth: 1,
+      borderColor: c.errorBannerBorder,
+    },
+    errorBannerText: {
+      flex: 1,
+      fontSize: theme.font(13),
+      color: c.errorBannerText,
+    },
+    listHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+      marginBottom: theme.space(12),
+    },
+    listHeaderTitle: {
+      fontSize: theme.font(18),
+      fontWeight: '700',
+      color: c.text,
+    },
+    listHeaderCount: {
+      fontSize: theme.font(13),
+      color: c.muted,
+    },
+    listWrap: {
+      flex: 1,
+      minHeight: theme.space(120),
+    },
+    listContent: {
+      paddingBottom: theme.space(96),
+    },
+    taskCard: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      backgroundColor: c.card,
+      borderRadius: theme.space(12),
+      borderWidth: 1,
+      borderColor: c.border,
+      padding: theme.space(16),
+      marginBottom: theme.space(12),
+      ...(Platform.OS === 'web'
+        ? { boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }
+        : {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.05,
+            shadowRadius: 2,
+            elevation: 1,
+          }),
+    },
+    taskCardDone: {
+      backgroundColor: c.cardDone,
+      borderColor: c.taskCardDoneBorder,
+    },
+    checkboxTouch: {
+      marginRight: theme.space(14),
+      marginTop: theme.space(2),
+    },
+    checkbox: {
+      width: theme.icon(22),
+      height: theme.icon(22),
+      borderRadius: theme.space(6),
+      borderWidth: 2,
+      borderColor: c.checkboxBorder,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: c.card,
+    },
+    checkboxChecked: {
+      backgroundColor: c.blue,
+      borderColor: c.blue,
+    },
+    taskMain: {
+      flex: 1,
+      minWidth: 0,
+    },
+    taskTitle: {
+      fontSize: theme.font(16),
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: theme.space(10),
+      lineHeight: theme.font(22),
+    },
+    taskTitleDone: {
+      color: c.muted,
+      textDecorationLine: 'line-through',
+      fontWeight: '500',
+    },
+    metaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: theme.space(14),
+      rowGap: theme.space(8),
+    },
+    metaItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.space(4),
+    },
+    metaText: {
+      fontSize: theme.font(13),
+      color: c.text,
+      fontWeight: '500',
+    },
+    metaTextHighlight: {
+      color: c.tomorrow,
+      fontWeight: '600',
+    },
+    metaDot: {
+      fontSize: theme.font(13),
+      color: c.muted,
+      marginHorizontal: theme.space(2),
+    },
+    metaTextMuted: {
+      fontSize: theme.font(13),
+      color: c.muted,
+    },
+    tagPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.space(6),
+      maxWidth: theme.space(140),
+    },
+    tagDot: {
+      width: theme.space(8),
+      height: theme.space(8),
+      borderRadius: theme.space(4),
+    },
+    tagName: {
+      fontSize: theme.font(13),
+      color: c.muted,
+      fontWeight: '500',
+      flexShrink: 1,
+    },
+    editIconBtn: {
+      padding: theme.space(4),
+      marginLeft: theme.space(4),
+      marginTop: -2,
+    },
+    fab: {
+      position: 'absolute',
+      right: theme.space(20),
+      width: theme.space(56),
+      height: theme.space(56),
+      borderRadius: theme.space(28),
+      backgroundColor: c.blue,
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      zIndex: 50,
+    },
+    emptyState: {
+      alignItems: 'center',
+      paddingVertical: theme.space(48),
+      paddingHorizontal: theme.space(24),
+    },
+    emptyTitle: {
+      fontSize: theme.font(17),
+      fontWeight: '600',
+      color: c.muted,
+      marginTop: theme.space(16),
+    },
+    emptySub: {
+      fontSize: theme.font(14),
+      color: c.emptySub,
+      textAlign: 'center',
+      marginTop: theme.space(8),
+      lineHeight: theme.font(20),
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.45)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: c.card,
+      borderTopLeftRadius: theme.space(16),
+      borderTopRightRadius: theme.space(16),
+      paddingBottom: theme.space(24),
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: theme.space(20),
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    modalTitle: {
+      fontSize: theme.font(18),
+      fontWeight: '700',
+      color: c.text,
+    },
+    modalBody: {
+      padding: theme.space(20),
+    },
+    filterLabel: {
+      fontSize: theme.font(14),
+      fontWeight: '600',
+      color: c.text,
+      marginBottom: theme.space(12),
+    },
+    filterChips: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.space(10),
+    },
+    chip: {
+      paddingVertical: theme.space(10),
+      paddingHorizontal: theme.space(16),
+      borderRadius: theme.space(8),
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.bgPage,
+    },
+    chipActive: {
+      borderColor: c.blue,
+      backgroundColor: c.chipActiveBg,
+    },
+    chipText: {
+      fontSize: theme.font(14),
+      fontWeight: '600',
+      color: c.muted,
+    },
+    chipTextActive: {
+      color: c.blue,
+    },
+    modalFooter: {
+      flexDirection: 'row',
+      paddingHorizontal: theme.space(20),
+      gap: theme.space(12),
+    },
+    modalBtnGhost: {
+      flex: 1,
+      paddingVertical: theme.space(14),
+      borderRadius: theme.space(8),
+      borderWidth: 1,
+      borderColor: c.border,
+      alignItems: 'center',
+    },
+    modalBtnGhostText: {
+      fontSize: theme.font(15),
+      fontWeight: '600',
+      color: c.muted,
+    },
+    modalBtnPrimary: {
+      flex: 1,
+      paddingVertical: theme.space(14),
+      borderRadius: theme.space(8),
+      backgroundColor: c.blue,
+      alignItems: 'center',
+    },
+    modalBtnPrimaryText: {
+      fontSize: theme.font(15),
+      fontWeight: '600',
+      color: '#fff',
+    },
+    inlineLoading: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: c.overlayLoading,
+    },
+  });
+}
