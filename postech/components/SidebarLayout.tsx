@@ -101,7 +101,7 @@ export function SidebarLayout({
 
       <View style={[styles.shell, { paddingTop: Platform.OS === 'ios' ? 0 : Math.max(insets.top, theme.space(8)) }]}>
         <View style={styles.appHeroHeader}>
-          <Text style={styles.appHeroTitle}>ByteTasks</Text>
+          <Text style={styles.appHeroTitle}>SeniorEase</Text>
           <Text style={styles.appHeroSubtitle}>Plataforma de Inclusão Digital</Text>
         </View>
 

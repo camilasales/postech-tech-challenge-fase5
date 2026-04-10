@@ -16,8 +16,7 @@ import type { ContrastPreset, FontSizePreset, SpacingPreset } from '@/context/Pe
 import { usePersonalization } from '@/context/PersonalizationContext';
 import { useAuth } from '@/context/AuthContext';
 
-const GRAD_BLUE = '#2563EB';
-const GRAD_PURPLE = '#7C3AED';
+const GREETING_BANNER_BG = '#4b00e0';
 const CARD_TASK = '#4F46E5';
 const CARD_SETTINGS = '#A855F7';
 const CARD_PROFILE = '#16A34A';
@@ -81,15 +80,12 @@ export function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
         <View style={styles.greetingWrap}>
-          <View style={styles.greetingGradientRow}>
-            <View style={[styles.greetingHalf, { backgroundColor: GRAD_BLUE }]} />
-            <View style={[styles.greetingHalf, { backgroundColor: GRAD_PURPLE }]} />
-          </View>
+          <View style={[styles.greetingGradientRow, { backgroundColor: GREETING_BANNER_BG }]} />
           <View style={styles.greetingOverlay}>
             <Ionicons name="sunny-outline" size={theme.icon(36)} color="#FFFFFF" />
             <View style={styles.greetingTextBlock}>
               <Text style={styles.greetingHi}>{greetingPeriod()}!</Text>
-              <Text style={styles.greetingWelcome}>Bem-vindo ao ByteTasks</Text>
+              <Text style={styles.greetingWelcome}>Bem-vindo ao SeniorEase</Text>
               <Text style={styles.greetingHint}>
                 Sua plataforma foi personalizada para facilitar o seu dia a dia digital.
               </Text>
@@ -202,11 +198,7 @@ function createStyles(theme: AppTheme) {
       ...shadow,
     },
     greetingGradientRow: {
-      flexDirection: 'row',
       height: GREETING_BANNER_HEIGHT,
-    },
-    greetingHalf: {
-      flex: 1,
     },
     greetingOverlay: {
       marginTop: -GREETING_BANNER_HEIGHT,

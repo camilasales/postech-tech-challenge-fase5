@@ -83,7 +83,7 @@ export default function LoginScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-          <Text style={styles.brand}>ByteTasks</Text>
+          <Text style={styles.brand}>SeniorEase</Text>
 
           <View style={styles.illustrationWrap}>
             <View style={styles.illustrationCircle}>

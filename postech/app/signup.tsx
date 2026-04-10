@@ -105,7 +105,7 @@ export default function SignupScreen() {
               style={styles.backBtn}>
               <Ionicons name="arrow-back" size={24} color={TEXT} />
             </TouchableOpacity>
-            <Text style={styles.brand}>ByteTasks</Text>
+            <Text style={styles.brand}>SeniorEase</Text>
             <View style={styles.topBarSpacer} />
           </View>
 
