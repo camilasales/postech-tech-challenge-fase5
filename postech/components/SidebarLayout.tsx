@@ -36,7 +36,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { key: 'home', label: 'Início', icon: 'home-outline', href: '/' },
-  { key: 'tasks', label: 'Tarefas', icon: 'checkbox-outline', href: '/tasks' },
+  { key: 'tasks', label: 'Atividades', icon: 'checkbox-outline', href: '/tasks' },
   { key: 'profile', label: 'Perfil', icon: 'person-outline', href: '/profile' },
   { key: 'settings', label: 'Configuração', icon: 'settings-outline', href: '/settings' },
 ];

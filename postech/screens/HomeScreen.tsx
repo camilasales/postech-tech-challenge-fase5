@@ -102,7 +102,7 @@ export function HomeScreen() {
               activeOpacity={0.9}>
               <Ionicons name="checkbox-outline" size={theme.icon(32)} color="#FFFFFF" />
               <Text style={styles.quickCardTitle}>Minhas Atividades</Text>
-              <Text style={styles.quickCardDesc}>Ver e organizar suas tarefas do dia</Text>
+              <Text style={styles.quickCardDesc}>Ver e organizar suas atividades do dia</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.quickCard, { backgroundColor: CARD_SETTINGS }]}

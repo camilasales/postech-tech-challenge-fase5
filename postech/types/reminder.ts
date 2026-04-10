@@ -16,6 +16,10 @@ export interface Reminder {
   updatedAt?: unknown;
 }
 
+export type TaskListRow =
+  | { type: 'header'; id: string; variant: 'pending' | 'completed' }
+  | { type: 'item'; id: string; reminder: Reminder };
+
 export type ReminderStatusFilter = 'all' | 'pending' | 'completed';
 
 export interface ReminderSummary {
