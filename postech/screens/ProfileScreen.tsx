@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Platform,
   Alert,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,8 +52,10 @@ export function ProfileScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const { user, signOutUser } = useAuth();
+  const [signOutModalVisible, setSignOutModalVisible] = useState(false);
 
   const handleSignOut = useCallback(async () => {
+    setSignOutModalVisible(false);
     await signOutUser();
     router.replace('/login');
   }, [router, signOutUser]);
@@ -134,7 +138,7 @@ export function ProfileScreen() {
 
         <TouchableOpacity
           style={styles.signOutBtn}
-          onPress={() => void handleSignOut()}
+          onPress={() => setSignOutModalVisible(true)}
           activeOpacity={0.88}
           accessibilityRole="button"
           accessibilityLabel="Sair da conta">
@@ -142,6 +146,43 @@ export function ProfileScreen() {
           <Text style={styles.signOutBtnText}>Sair</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal
+        visible={signOutModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSignOutModalVisible(false)}
+        accessibilityViewIsModal>
+        <View style={styles.signOutModalRoot}>
+          <Pressable
+            style={[StyleSheet.absoluteFillObject, styles.signOutModalBackdrop]}
+            onPress={() => setSignOutModalVisible(false)}
+            accessibilityLabel="Fechar diálogo"
+          />
+          <View style={styles.signOutModalCenter} pointerEvents="box-none">
+            <View style={styles.signOutModalCard}>
+              <Text style={styles.signOutModalTitle}>Sair da conta?</Text>
+              <Text style={styles.signOutModalMessage}>
+                Você precisará entrar novamente para acessar o SeniorEase.
+              </Text>
+              <View style={styles.signOutModalActions}>
+                <TouchableOpacity
+                  style={styles.signOutModalBtnGhost}
+                  onPress={() => setSignOutModalVisible(false)}
+                  activeOpacity={0.88}>
+                  <Text style={styles.signOutModalBtnGhostText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.signOutModalBtnDanger}
+                  onPress={() => void handleSignOut()}
+                  activeOpacity={0.88}>
+                  <Text style={styles.signOutModalBtnDangerText}>Sair</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SidebarLayout>
   );
 }
@@ -305,6 +346,71 @@ function createStyles(theme: AppTheme) {
       fontSize: theme.font(16),
       fontWeight: '700',
       color: '#B91C1C',
+    },
+    signOutModalRoot: {
+      flex: 1,
+    },
+    signOutModalBackdrop: {
+      backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    signOutModalCenter: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: theme.space(24),
+    },
+    signOutModalCard: {
+      width: '100%',
+      maxWidth: 400,
+      backgroundColor: '#FFFFFF',
+      borderRadius: theme.space(16),
+      paddingVertical: theme.space(22),
+      paddingHorizontal: theme.space(20),
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+    },
+    signOutModalTitle: {
+      fontSize: theme.font(18),
+      fontWeight: '800',
+      color: '#111827',
+      marginBottom: theme.space(10),
+    },
+    signOutModalMessage: {
+      fontSize: theme.font(14),
+      color: '#4B5563',
+      lineHeight: theme.font(21),
+      marginBottom: theme.space(22),
+    },
+    signOutModalActions: {
+      flexDirection: 'row',
+      gap: theme.space(12),
+    },
+    signOutModalBtnGhost: {
+      flex: 1,
+      paddingVertical: theme.space(14),
+      borderRadius: theme.space(10),
+      borderWidth: 1,
+      borderColor: '#D1D5DB',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    signOutModalBtnGhostText: {
+      fontSize: theme.font(15),
+      fontWeight: '700',
+      color: '#374151',
+    },
+    signOutModalBtnDanger: {
+      flex: 1,
+      paddingVertical: theme.space(14),
+      borderRadius: theme.space(10),
+      backgroundColor: '#B91C1C',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    signOutModalBtnDangerText: {
+      fontSize: theme.font(15),
+      fontWeight: '700',
+      color: '#FFFFFF',
     },
   });
 }

@@ -97,10 +97,6 @@ export default function LoginScreen() {
 
           <View style={styles.card}>
             <Text style={styles.title}>Entrar</Text>
-            <Text style={styles.subtitle}>
-              Autenticacao via json-server: usuarios em <Text style={styles.subtitleEm}>db.json</Text>. Use o
-              mesmo email e senha cadastrados na API.
-            </Text>
 
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email</Text>
@@ -160,10 +156,6 @@ export default function LoginScreen() {
                 Criar conta
               </Link>
             </View>
-
-            <Text style={styles.apiHint} selectable>
-              API json-server: {API_BASE_URL}
-            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

@@ -150,10 +150,6 @@ export function HomeScreen() {
               </View>
             </View>
           </View>
-
-          {user ? (
-            <Text style={styles.signedHint}>Conectado como {user.email}</Text>
-          ) : null}
         </View>
       </ScrollView>
     </SidebarLayout>

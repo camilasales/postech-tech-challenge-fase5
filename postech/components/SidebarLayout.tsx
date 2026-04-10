@@ -37,8 +37,8 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { key: 'home', label: 'Início', icon: 'home-outline', href: '/' },
   { key: 'tasks', label: 'Atividades', icon: 'checkbox-outline', href: '/tasks' },
-  { key: 'profile', label: 'Perfil', icon: 'person-outline', href: '/profile' },
   { key: 'settings', label: 'Personalização', icon: 'settings-outline', href: '/settings' },
+  { key: 'profile', label: 'Perfil', icon: 'person-outline', href: '/profile' },
 ];
 
 export type SidebarLayoutSearchConfig = {
