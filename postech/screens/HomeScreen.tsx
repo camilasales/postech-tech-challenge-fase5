@@ -33,25 +33,26 @@ function greetingPeriod(): string {
 }
 
 function labelFontSize(s: FontSizePreset): string {
-  const m = { small: 'Pequeno', medium: 'Médio', large: 'Grande' };
+  const m = { small: 'Normal', medium: 'Grande', large: 'Extra Grande' };
   return m[s];
 }
 
 function labelContrast(s: ContrastPreset): string {
-  return s === 'high' ? 'Alto' : 'Padrão';
+  const m = { default: 'Normal', high: 'Alto', max: 'Máximo' };
+  return m[s];
 }
 
 function labelSpacing(s: SpacingPreset): string {
   const m = {
-    compact: 'Básico (simplificado)',
-    normal: 'Padrão',
-    relaxed: 'Confortável',
+    compact: 'Normal',
+    normal: 'Confortável',
+    relaxed: 'Espaçoso',
   };
   return m[s];
 }
 
 function labelFeedback(contrast: ContrastPreset): string {
-  return contrast === 'high' ? 'Ativado' : 'Padrão';
+  return contrast === 'default' ? 'Padrão' : 'Ativado';
 }
 
 export function HomeScreen() {

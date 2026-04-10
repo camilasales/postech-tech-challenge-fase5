@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Pressable,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -17,22 +18,81 @@ import {
   type SpacingPreset,
 } from '@/context/PersonalizationContext';
 
+const BRAND_PURPLE = '#4B00E0';
+const RESET_BTN_ORANGE = '#F97316';
+const RESET_BTN_BORDER = '#C2410C';
+
 const FONT_OPTIONS: { key: FontSizePreset; label: string }[] = [
-  { key: 'small', label: 'Pequeno' },
-  { key: 'medium', label: 'Médio' },
-  { key: 'large', label: 'Grande' },
+  { key: 'small', label: 'Normal' },
+  { key: 'medium', label: 'Grande' },
+  { key: 'large', label: 'Extra Grande' },
 ];
 
-const CONTRAST_OPTIONS: { key: ContrastPreset; label: string; hint: string }[] = [
-  { key: 'default', label: 'Padrão', hint: 'Cores suaves' },
-  { key: 'high', label: 'Alto', hint: 'Mais contraste' },
+const CONTRAST_OPTIONS: { key: ContrastPreset; label: string }[] = [
+  { key: 'default', label: 'Normal' },
+  { key: 'high', label: 'Alto' },
+  { key: 'max', label: 'Máximo' },
 ];
 
 const SPACING_OPTIONS: { key: SpacingPreset; label: string }[] = [
-  { key: 'compact', label: 'Compacto' },
-  { key: 'normal', label: 'Normal' },
-  { key: 'relaxed', label: 'Amplo' },
+  { key: 'compact', label: 'Normal' },
+  { key: 'normal', label: 'Confortável' },
+  { key: 'relaxed', label: 'Espaçoso' },
 ];
+
+type SegmentOption<T extends string> = { key: T; label: string };
+
+function SettingCard<T extends string>({
+  icon,
+  iconName,
+  title,
+  description,
+  options,
+  value,
+  onChange,
+  styles,
+  theme,
+}: {
+  icon?: React.ReactNode;
+  iconName?: keyof typeof Ionicons.glyphMap;
+  title: string;
+  description: string;
+  options: SegmentOption<T>[];
+  value: T;
+  onChange: (key: T) => void;
+  styles: ReturnType<typeof createFormStyles>;
+  theme: AppTheme;
+}) {
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardTitleRow}>
+        {iconName ? (
+          <Ionicons name={iconName} size={theme.icon(26)} color={BRAND_PURPLE} />
+        ) : (
+          icon
+        )}
+        <Text style={styles.cardTitle}>{title}</Text>
+      </View>
+      <Text style={styles.cardDescription}>{description}</Text>
+      <View style={styles.segmentRow}>
+        {options.map((opt) => {
+          const active = value === opt.key;
+          return (
+            <TouchableOpacity
+              key={opt.key}
+              style={[styles.segment, active && styles.segmentActive]}
+              onPress={() => onChange(opt.key)}
+              activeOpacity={0.88}>
+              <Text style={[styles.segmentText, active && styles.segmentTextActive]} numberOfLines={1}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
 
 /** Controles de personalização (fonte, contraste, espaçamento) para uso em página ou modal. */
 export function PersonalizationForm() {
@@ -41,73 +101,56 @@ export function PersonalizationForm() {
   const formStyles = useMemo(() => createFormStyles(theme), [theme]);
 
   return (
-    <>
-      <Text style={formStyles.sectionLabel}>Tamanho da fonte</Text>
-      <View style={formStyles.segmentRow}>
-        {FONT_OPTIONS.map((opt) => {
-          const active = settings.fontSize === opt.key;
-          return (
-            <TouchableOpacity
-              key={opt.key}
-              style={[formStyles.segment, active && formStyles.segmentActive]}
-              onPress={() => setFontSize(opt.key)}
-              activeOpacity={0.85}>
-              <Text style={[formStyles.segmentText, active && formStyles.segmentTextActive]}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+    <View>
+      <SettingCard
+        icon={
+          <View style={formStyles.fontIconWrap}>
+            <Text style={formStyles.fontIconT}>T</Text>
+          </View>
+        }
+        title="Tamanho da Fonte"
+        description="Escolha o tamanho de letra mais confortável para você ler:"
+        options={FONT_OPTIONS}
+        value={settings.fontSize}
+        onChange={setFontSize}
+        styles={formStyles}
+        theme={theme}
+      />
 
-      <Text style={[formStyles.sectionLabel, formStyles.sectionLabelSpaced]}>Contraste</Text>
-      {CONTRAST_OPTIONS.map((opt) => {
-        const active = settings.contrast === opt.key;
-        return (
-          <TouchableOpacity
-            key={opt.key}
-            style={[formStyles.optionCard, active && formStyles.optionCardActive]}
-            onPress={() => setContrast(opt.key)}
-            activeOpacity={0.85}>
-            <View style={formStyles.optionCardInner}>
-              <Text style={formStyles.optionTitle}>{opt.label}</Text>
-              <Text style={formStyles.optionHint}>{opt.hint}</Text>
-            </View>
-            {active ? (
-              <Ionicons name="checkmark-circle" size={theme.icon(22)} color={theme.colors.blue} />
-            ) : (
-              <View style={formStyles.radioOuter}>
-                <View style={formStyles.radioInner} />
-              </View>
-            )}
-          </TouchableOpacity>
-        );
-      })}
+      <SettingCard
+        iconName="contrast-outline"
+        title="Nível de Contraste"
+        description="Aumente o contraste para facilitar a leitura:"
+        options={CONTRAST_OPTIONS}
+        value={settings.contrast}
+        onChange={setContrast}
+        styles={formStyles}
+        theme={theme}
+      />
 
-      <Text style={[formStyles.sectionLabel, formStyles.sectionLabelSpaced]}>
-        Espaçamento entre elementos
-      </Text>
-      <View style={formStyles.segmentRow}>
-        {SPACING_OPTIONS.map((opt) => {
-          const active = settings.spacing === opt.key;
-          return (
-            <TouchableOpacity
-              key={opt.key}
-              style={[formStyles.segment, active && formStyles.segmentActive]}
-              onPress={() => setSpacing(opt.key)}
-              activeOpacity={0.85}>
-              <Text style={[formStyles.segmentText, active && formStyles.segmentTextActive]}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      <SettingCard
+        iconName="expand-outline"
+        title="Espaçamento"
+        description="Ajuste o espaço entre os elementos da tela:"
+        options={SPACING_OPTIONS}
+        value={settings.spacing}
+        onChange={setSpacing}
+        styles={formStyles}
+        theme={theme}
+      />
 
-      <TouchableOpacity style={formStyles.resetBtn} onPress={resetToDefaults}>
-        <Text style={formStyles.resetBtnText}>Restaurar padrões</Text>
+      <TouchableOpacity
+        style={formStyles.resetBtn}
+        onPress={resetToDefaults}
+        activeOpacity={0.9}
+        accessibilityRole="button"
+        accessibilityLabel="Restaurar configurações padrão">
+        <View style={formStyles.resetBtnInner}>
+          <Ionicons name="refresh-outline" size={theme.icon(22)} color="#FFFFFF" />
+          <Text style={formStyles.resetBtnText}>Restaurar Configurações Padrão</Text>
+        </View>
       </TouchableOpacity>
-    </>
+    </View>
   );
 }
 
@@ -129,7 +172,7 @@ export function PersonalizationPanel({ visible, onClose }: PersonalizationPanelP
           <View style={modalStyles.header}>
             <View>
               <Text style={modalStyles.title}>Personalização</Text>
-              <Text style={modalStyles.subtitle}>Ajuste texto, contraste e espaçamento</Text>
+              <Text style={modalStyles.subtitle}>Ajuste a plataforma do seu jeito</Text>
             </View>
             <TouchableOpacity onPress={onClose} hitSlop={12} accessibilityLabel="Fechar">
               <Ionicons name="close" size={theme.icon(26)} color={c.text} />
@@ -161,7 +204,7 @@ function createModalStyles(theme: AppTheme) {
       backgroundColor: 'rgba(0,0,0,0.45)',
     },
     sheet: {
-      backgroundColor: c.card,
+      backgroundColor: c.bgPage,
       borderTopLeftRadius: theme.space(16),
       borderTopRightRadius: theme.space(16),
       maxHeight: '88%',
@@ -201,96 +244,119 @@ function createModalStyles(theme: AppTheme) {
 }
 
 function createFormStyles(theme: AppTheme) {
-  const c = theme.colors;
+  const cardShadow =
+    Platform.OS === 'web'
+      ? { boxShadow: '0 2px 10px rgba(15, 23, 42, 0.08)' }
+      : {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+          elevation: 3,
+        };
+
   return StyleSheet.create({
-    sectionLabel: {
-      fontSize: theme.font(13),
-      fontWeight: '600',
-      color: c.text,
+    card: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: theme.space(14),
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+      paddingVertical: theme.space(18),
+      paddingHorizontal: theme.space(18),
+      marginBottom: theme.space(16),
+      ...cardShadow,
+    },
+    cardTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.space(12),
       marginBottom: theme.space(10),
     },
-    sectionLabelSpaced: {
-      marginTop: theme.space(20),
+    cardTitle: {
+      flex: 1,
+      fontSize: theme.font(17),
+      fontWeight: '700',
+      color: '#111827',
+    },
+    cardDescription: {
+      fontSize: theme.font(14),
+      fontWeight: '400',
+      color: '#4B5563',
+      lineHeight: theme.font(21),
+      marginBottom: theme.space(16),
+    },
+    fontIconWrap: {
+      width: theme.space(32),
+      height: theme.space(32),
+      borderRadius: theme.space(8),
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    fontIconT: {
+      fontSize: theme.font(22),
+      fontWeight: '800',
+      color: BRAND_PURPLE,
     },
     segmentRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: theme.space(8),
+      gap: theme.space(10),
     },
     segment: {
-      paddingVertical: theme.space(10),
-      paddingHorizontal: theme.space(14),
-      borderRadius: theme.space(8),
+      flex: 1,
+      minWidth: 0,
+      paddingVertical: theme.space(12),
+      paddingHorizontal: theme.space(6),
+      borderRadius: theme.space(10),
       borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.bgPage,
+      borderColor: '#D1D5DB',
+      backgroundColor: '#FFFFFF',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     segmentActive: {
-      borderColor: c.blue,
-      backgroundColor: c.chipActiveBg,
+      borderColor: BRAND_PURPLE,
+      backgroundColor: BRAND_PURPLE,
     },
     segmentText: {
       fontSize: theme.font(14),
       fontWeight: '600',
-      color: c.muted,
+      color: '#111827',
+      textAlign: 'center',
     },
     segmentTextActive: {
-      color: c.blue,
-    },
-    optionCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      padding: theme.space(14),
-      borderRadius: theme.space(10),
-      borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.bgPage,
-      marginBottom: theme.space(10),
-    },
-    optionCardActive: {
-      borderColor: c.blue,
-      backgroundColor: c.chipActiveBg,
-    },
-    optionCardInner: {
-      flex: 1,
-    },
-    optionTitle: {
-      fontSize: theme.font(15),
-      fontWeight: '600',
-      color: c.text,
-    },
-    optionHint: {
-      fontSize: theme.font(12),
-      color: c.muted,
-      marginTop: theme.space(2),
-    },
-    radioOuter: {
-      width: theme.icon(22),
-      height: theme.icon(22),
-      borderRadius: theme.icon(11),
-      borderWidth: 2,
-      borderColor: c.border,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    radioInner: {
-      width: theme.icon(10),
-      height: theme.icon(10),
-      borderRadius: theme.icon(5),
-      backgroundColor: 'transparent',
+      color: '#FFFFFF',
     },
     resetBtn: {
-      marginTop: theme.space(24),
-      paddingVertical: theme.space(14),
-      alignItems: 'center',
-      borderRadius: theme.space(8),
+      marginTop: theme.space(20),
+      width: '100%',
+      borderRadius: theme.space(12),
       borderWidth: 1,
-      borderColor: c.border,
+      borderColor: RESET_BTN_BORDER,
+      backgroundColor: RESET_BTN_ORANGE,
+      overflow: 'hidden',
+      ...(Platform.OS === 'web'
+        ? { boxShadow: '0 3px 10px rgba(249, 115, 22, 0.35)' }
+        : {
+            shadowColor: '#EA580C',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.35,
+            shadowRadius: 6,
+            elevation: 4,
+          }),
+    },
+    resetBtnInner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: theme.space(10),
+      paddingVertical: theme.space(16),
+      paddingHorizontal: theme.space(18),
     },
     resetBtnText: {
-      fontSize: theme.font(14),
-      fontWeight: '600',
-      color: c.muted,
+      fontSize: theme.font(15),
+      fontWeight: '700',
+      color: '#FFFFFF',
+      letterSpacing: 0.2,
     },
   });
 }

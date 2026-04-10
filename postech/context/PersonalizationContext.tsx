@@ -11,7 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const STORAGE_KEY = '@postech/personalization';
 
 export type FontSizePreset = 'small' | 'medium' | 'large';
-export type ContrastPreset = 'default' | 'high';
+export type ContrastPreset = 'default' | 'high' | 'max';
 export type SpacingPreset = 'compact' | 'normal' | 'relaxed';
 
 export type PersonalizationSettings = {
@@ -78,52 +78,70 @@ function buildTheme(settings: PersonalizationSettings): AppTheme {
   const space = (base: number) => Math.max(0, Math.round(base * spacingScale));
   const icon = (base: number) => Math.max(12, Math.round(base * fontScale));
 
+  const highContrastColors: ThemeColors = {
+    bgPage: '#FFFFFF',
+    card: '#F3F4F6',
+    cardDone: '#E5E7EB',
+    text: '#000000',
+    muted: '#1F2937',
+    border: '#111827',
+    blue: '#1D4ED8',
+    tomorrow: '#C2410C',
+    placeholder: '#374151',
+    chipActiveBg: '#DBEAFE',
+    navAccent: '#2563EB',
+    navActiveBg: '#DBEAFE',
+    navInactive: '#1F2937',
+    errorBannerBg: '#FEF9C3',
+    errorBannerBorder: '#CA8A04',
+    errorBannerText: '#713F12',
+    emptySub: '#374151',
+    checkboxBorder: '#111827',
+    taskCardDoneBorder: '#374151',
+    overlayLoading: 'rgba(255,255,255,0.65)',
+  };
+
+  const maxContrastColors: ThemeColors = {
+    ...highContrastColors,
+    bgPage: '#FFFFFF',
+    card: '#FFFFFF',
+    cardDone: '#E5E7EB',
+    border: '#000000',
+    checkboxBorder: '#000000',
+    taskCardDoneBorder: '#000000',
+    blue: '#1E3A8A',
+    muted: '#000000',
+  };
+
+  const defaultColors: ThemeColors = {
+    bgPage: '#F9FAFB',
+    card: '#FFFFFF',
+    cardDone: '#F3F4F6',
+    text: '#111827',
+    muted: '#6B7280',
+    border: '#E5E7EB',
+    blue: '#2563EB',
+    tomorrow: '#EA580C',
+    placeholder: '#9CA3AF',
+    chipActiveBg: '#EFF6FF',
+    navAccent: '#2563EB',
+    navActiveBg: '#EFF6FF',
+    navInactive: '#4B5563',
+    errorBannerBg: '#FEF3C7',
+    errorBannerBorder: '#FCD34D',
+    errorBannerText: '#92400E',
+    emptySub: '#9CA3AF',
+    checkboxBorder: '#D1D5DB',
+    taskCardDoneBorder: '#E5E7EB',
+    overlayLoading: 'rgba(249,250,251,0.5)',
+  };
+
   const colors: ThemeColors =
-    settings.contrast === 'high'
-      ? {
-          bgPage: '#FFFFFF',
-          card: '#F3F4F6',
-          cardDone: '#E5E7EB',
-          text: '#000000',
-          muted: '#1F2937',
-          border: '#111827',
-          blue: '#1D4ED8',
-          tomorrow: '#C2410C',
-          placeholder: '#374151',
-          chipActiveBg: '#DBEAFE',
-          navAccent: '#2563EB',
-          navActiveBg: '#DBEAFE',
-          navInactive: '#1F2937',
-          errorBannerBg: '#FEF9C3',
-          errorBannerBorder: '#CA8A04',
-          errorBannerText: '#713F12',
-          emptySub: '#374151',
-          checkboxBorder: '#111827',
-          taskCardDoneBorder: '#374151',
-          overlayLoading: 'rgba(255,255,255,0.65)',
-        }
-      : {
-          bgPage: '#F9FAFB',
-          card: '#FFFFFF',
-          cardDone: '#F3F4F6',
-          text: '#111827',
-          muted: '#6B7280',
-          border: '#E5E7EB',
-          blue: '#2563EB',
-          tomorrow: '#EA580C',
-          placeholder: '#9CA3AF',
-          chipActiveBg: '#EFF6FF',
-          navAccent: '#2563EB',
-          navActiveBg: '#EFF6FF',
-          navInactive: '#4B5563',
-          errorBannerBg: '#FEF3C7',
-          errorBannerBorder: '#FCD34D',
-          errorBannerText: '#92400E',
-          emptySub: '#9CA3AF',
-          checkboxBorder: '#D1D5DB',
-          taskCardDoneBorder: '#E5E7EB',
-          overlayLoading: 'rgba(249,250,251,0.5)',
-        };
+    settings.contrast === 'max'
+      ? maxContrastColors
+      : settings.contrast === 'high'
+        ? highContrastColors
+        : defaultColors;
 
   return {
     colors,
@@ -156,7 +174,9 @@ function parseStored(raw: string | null): PersonalizationSettings {
         ? o.fontSize
         : DEFAULT_SETTINGS.fontSize;
     const contrast =
-      o.contrast === 'default' || o.contrast === 'high' ? o.contrast : DEFAULT_SETTINGS.contrast;
+      o.contrast === 'default' || o.contrast === 'high' || o.contrast === 'max'
+        ? o.contrast
+        : DEFAULT_SETTINGS.contrast;
     const spacing =
       o.spacing === 'compact' || o.spacing === 'normal' || o.spacing === 'relaxed'
         ? o.spacing
