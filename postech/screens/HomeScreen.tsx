@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -59,21 +59,15 @@ export function HomeScreen() {
   const { theme, settings } = usePersonalization();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
-  const { user, signOutUser } = useAuth();
+  const { user } = useAuth();
   const { width } = useWindowDimensions();
   const stackCards = width < 560;
-
-  const handleSignOut = useCallback(async () => {
-    await signOutUser();
-    router.replace('/login');
-  }, [router, signOutUser]);
 
   return (
     <SidebarLayout
       activeNavKey="home"
       mainVariant="flush"
       desktopTopBarLeft="empty"
-      onSignOut={handleSignOut}
       searchConfig={null}
       topBarRight={null}>
       <ScrollView

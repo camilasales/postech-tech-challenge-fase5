@@ -25,8 +25,6 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { patchReminderCompleted } from '@/services/api';
 import { parseActivityDescription } from '@/utils/activityDescription';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/context/AuthContext';
-
 const STAT_PENDING_BG = '#FFFBEB';
 const STAT_PENDING_BORDER = '#FDBA74';
 const STAT_PENDING_ACCENT = '#EA580C';
@@ -69,7 +67,6 @@ export function TaskListScreen() {
   const c = theme.colors;
 
   const router = useRouter();
-  const { signOutUser } = useAuth();
   const params = useLocalSearchParams();
   const queryClient = useQueryClient();
   const [showFilters, setShowFilters] = useState(false);
@@ -326,11 +323,6 @@ export function TaskListScreen() {
     mobilePlaceholder: 'Buscar atividades...',
   };
 
-  const handleSignOut = useCallback(async () => {
-    await signOutUser();
-    router.replace('/login');
-  }, [router, signOutUser]);
-
   const listHeader = useMemo(
     () => (
       <View style={styles.listHeaderRoot}>
@@ -413,7 +405,6 @@ export function TaskListScreen() {
     <SidebarLayout
       activeNavKey="tasks"
       desktopTopBarLeft="empty"
-      onSignOut={handleSignOut}
       searchConfig={searchConfig}
       topBarRight={
         <TouchableOpacity onPress={() => setShowFilters(true)} style={styles.iconBtn}>

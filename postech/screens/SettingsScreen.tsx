@@ -1,29 +1,19 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SidebarLayout, APP_HEADER_PURPLE } from '@/components/SidebarLayout';
 import { PersonalizationForm } from '@/components/PersonalizationPanel';
 import type { AppTheme } from '@/context/PersonalizationContext';
 import { usePersonalization } from '@/context/PersonalizationContext';
-import { useAuth } from '@/context/AuthContext';
 
 export function SettingsScreen() {
   const { theme } = usePersonalization();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const router = useRouter();
-  const { signOutUser } = useAuth();
-
-  const handleSignOut = useCallback(async () => {
-    await signOutUser();
-    router.replace('/login');
-  }, [router, signOutUser]);
 
   return (
     <SidebarLayout
       activeNavKey="settings"
       desktopTopBarLeft="empty"
-      onSignOut={handleSignOut}
       searchConfig={null}
       topBarRight={null}>
       <ScrollView

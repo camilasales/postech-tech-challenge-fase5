@@ -55,7 +55,6 @@ type SidebarLayoutProps = {
   topBarRight?: React.ReactNode;
   desktopTopBarLeft: 'back' | 'empty';
   postContent?: React.ReactNode;
-  onSignOut?: () => void | Promise<void>;
   mainVariant?: 'standard' | 'flush';
   statusBarStyle?: 'light-content' | 'dark-content';
   statusBarBackgroundColor?: string;
@@ -69,7 +68,6 @@ export function SidebarLayout({
   topBarRight,
   desktopTopBarLeft,
   postContent,
-  onSignOut,
   mainVariant = 'standard',
   statusBarStyle = 'light-content',
   statusBarBackgroundColor,
@@ -173,17 +171,6 @@ export function SidebarLayout({
                 </TouchableOpacity>
               );
             })}
-            {onSignOut ? (
-              <TouchableOpacity
-                style={styles.bottomNavItem}
-                onPress={() => void onSignOut()}
-                activeOpacity={0.7}>
-                <Ionicons name="log-out-outline" size={theme.icon(24)} color={c.navInactive} />
-                <Text style={styles.bottomNavLabel} numberOfLines={1}>
-                  Sair
-                </Text>
-              </TouchableOpacity>
-            ) : null}
           </View>
         </View>
       </View>
