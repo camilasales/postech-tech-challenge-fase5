@@ -36,7 +36,7 @@
       },
       "createdAt": "2026-04-10T15:17:06.395Z",
       "id": 2,
-      "updatedAt": "2026-04-10T19:32:14.239Z"
+      "updatedAt": "2026-04-10T19:49:56.793Z"
     },
     {
       "userId": 1,
@@ -51,7 +51,22 @@
       },
       "createdAt": "2026-04-10T16:59:51.291Z",
       "id": 3,
-      "updatedAt": "2026-04-10T19:41:03.824Z"
+      "updatedAt": "2026-04-10T19:49:41.641Z"
+    },
+    {
+      "userId": 1,
+      "description": "teste",
+      "scheduledAt": "2026-04-11T12:00:00.000Z",
+      "completed": true,
+      "commentCount": 0,
+      "attachmentCount": 0,
+      "tag": {
+        "name": "Geral",
+        "color": "#8B5CF6"
+      },
+      "createdAt": "2026-04-10T19:44:16.254Z",
+      "id": 4,
+      "updatedAt": "2026-04-10T19:49:50.605Z"
     }
   ]
 }

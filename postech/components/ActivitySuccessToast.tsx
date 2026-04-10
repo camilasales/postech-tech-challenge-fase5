@@ -11,12 +11,17 @@ const TOAST_BORDER = '#FFFFFF';
 type ActivitySuccessToastProps = {
   visible: boolean;
   onDismiss: () => void;
+  /** Linha abaixo de "Sucesso!" — varia conforme criar, editar ou concluir. */
+  subtitle?: string;
   autoHideMs?: number;
 };
+
+const DEFAULT_SUBTITLE = 'Atividade adicionada com sucesso!';
 
 export function ActivitySuccessToast({
   visible,
   onDismiss,
+  subtitle = DEFAULT_SUBTITLE,
   autoHideMs = 4500,
 }: ActivitySuccessToastProps) {
   const insets = useSafeAreaInsets();
@@ -50,7 +55,7 @@ export function ActivitySuccessToast({
           </View>
           <View style={styles.textCol}>
             <Text style={styles.title}>Sucesso!</Text>
-            <Text style={styles.subtitle}>Atividade adicionada com sucesso!</Text>
+            <Text style={styles.subtitle}>{subtitle}</Text>
           </View>
         </View>
       </View>

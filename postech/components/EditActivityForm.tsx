@@ -40,9 +40,11 @@ type EditActivityFormProps = {
   visible: boolean;
   reminderId: string | null;
   onClose: () => void;
+  /** Chamado após salvar alterações (ex.: toast na listagem). */
+  onSaved?: () => void;
 };
 
-export function EditActivityForm({ visible, reminderId, onClose }: EditActivityFormProps) {
+export function EditActivityForm({ visible, reminderId, onClose, onSaved }: EditActivityFormProps) {
   const insets = useSafeAreaInsets();
   const { theme } = usePersonalization();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -111,6 +113,7 @@ export function EditActivityForm({ visible, reminderId, onClose }: EditActivityF
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reminders'] });
       queryClient.invalidateQueries({ queryKey: ['reminder'] });
+      onSaved?.();
       handleClose();
     },
     onError: () => {

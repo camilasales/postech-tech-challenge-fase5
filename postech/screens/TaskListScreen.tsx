@@ -75,6 +75,7 @@ export function TaskListScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [successToastSubtitle, setSuccessToastSubtitle] = useState('Atividade adicionada com sucesso!');
   const [editingReminderId, setEditingReminderId] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReminderStatusFilter>('all');
@@ -107,12 +108,20 @@ export function TaskListScreen() {
     }
   }, [params.refresh, refetch, router]);
 
+  const openSuccessToast = useCallback((subtitle: string) => {
+    setSuccessToastSubtitle(subtitle);
+    setShowSuccessToast(true);
+  }, []);
+
   const toggleMutation = useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
       await patchReminderCompleted(id, completed);
     },
-    onSuccess: () => {
+    onSuccess: (_data, { completed }) => {
       queryClient.invalidateQueries({ queryKey: ['reminders'] });
+      if (completed) {
+        openSuccessToast('Atividade concluída com sucesso!');
+      }
     },
   });
 
@@ -160,7 +169,10 @@ export function TaskListScreen() {
   const openAddForm = useCallback(() => setShowAddForm(true), []);
   const closeAddForm = useCallback(() => setShowAddForm(false), []);
 
-  const showActivitySavedToast = useCallback(() => setShowSuccessToast(true), []);
+  const showActivitySavedToast = useCallback(
+    () => openSuccessToast('Atividade adicionada com sucesso!'),
+    [openSuccessToast]
+  );
   const dismissSuccessToast = useCallback(() => setShowSuccessToast(false), []);
 
   const scrollListToAddSection = useCallback(
@@ -410,12 +422,17 @@ export function TaskListScreen() {
       }
       postContent={
         <>
-          <ActivitySuccessToast visible={showSuccessToast} onDismiss={dismissSuccessToast} />
+          <ActivitySuccessToast
+            visible={showSuccessToast}
+            subtitle={successToastSubtitle}
+            onDismiss={dismissSuccessToast}
+          />
 
           <EditActivityForm
             visible={editingReminderId !== null}
             reminderId={editingReminderId}
             onClose={closeEditModal}
+            onSaved={() => openSuccessToast('Atividade alterada com sucesso!')}
           />
 
           <Modal
