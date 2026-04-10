@@ -21,7 +21,52 @@
       },
       "createdAt": "2026-04-06T19:16:29.879Z",
       "id": 1,
-      "updatedAt": "2026-04-06T19:17:09.239Z"
+      "updatedAt": "2026-04-09T01:04:49.071Z"
+    },
+    {
+      "userId": 1,
+      "description": "testete\nteste de novo",
+      "scheduledAt": "2026-04-12T01:22:00.000Z",
+      "completed": true,
+      "commentCount": 0,
+      "attachmentCount": 0,
+      "tag": {
+        "name": "Geral",
+        "color": "#8B5CF6"
+      },
+      "createdAt": "2026-04-10T15:17:06.395Z",
+      "id": 2,
+      "updatedAt": "2026-04-10T19:49:56.793Z"
+    },
+    {
+      "userId": 1,
+      "description": "teste2 aaa",
+      "scheduledAt": "2026-04-12T01:22:00.000Z",
+      "completed": false,
+      "commentCount": 0,
+      "attachmentCount": 0,
+      "tag": {
+        "name": "Geral",
+        "color": "#8B5CF6"
+      },
+      "createdAt": "2026-04-10T16:59:51.291Z",
+      "id": 3,
+      "updatedAt": "2026-04-10T19:49:41.641Z"
+    },
+    {
+      "userId": 1,
+      "description": "teste",
+      "scheduledAt": "2026-04-11T12:00:00.000Z",
+      "completed": true,
+      "commentCount": 0,
+      "attachmentCount": 0,
+      "tag": {
+        "name": "Geral",
+        "color": "#8B5CF6"
+      },
+      "createdAt": "2026-04-10T19:44:16.254Z",
+      "id": 4,
+      "updatedAt": "2026-04-10T19:49:50.605Z"
     }
   ]
 }

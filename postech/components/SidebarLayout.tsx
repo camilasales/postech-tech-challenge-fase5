@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,40 +7,38 @@ import {
   StatusBar,
   TouchableOpacity,
   TextInput,
-  Modal,
   Platform,
-  useWindowDimensions,
-  Pressable,
-  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import type { AppTheme } from '@/context/PersonalizationContext';
+import { usePersonalization } from '@/context/PersonalizationContext';
+
+export const APP_HEADER_PURPLE = '#4B00E0';
 
 export const SIDEBAR_BREAKPOINT = 900;
 
-const BLUE = '#2563EB';
-const BORDER = '#E5E7EB';
-const BG_PAGE = '#F9FAFB';
-const CARD = '#FFFFFF';
-const TEXT = '#111827';
-const MUTED = '#6B7280';
-const SIDEBAR_W = 248;
+export function getBottomNavHeight(theme: AppTheme, extraBottomInset = 0): number {
+  const row =
+    theme.space(8) + theme.icon(24) + theme.space(4) + theme.font(11) + theme.space(8) + 3;
+  return row + Math.max(theme.space(6), extraBottomInset);
+}
+
+export type SidebarNavKey = 'home' | 'tasks' | 'profile' | 'settings';
 
 type NavItem = {
-  key: string;
+  key: SidebarNavKey;
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
-  href?: '/';
-  soon?: boolean;
+  href: '/' | '/tasks' | '/profile' | '/settings';
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { key: 'tasks', label: 'Tarefas', icon: 'checkbox-outline', href: '/' },
-  { key: 'people', label: 'Pessoas', icon: 'people-outline', soon: true },
-  { key: 'reports', label: 'Relatórios', icon: 'bar-chart-outline', soon: true },
-  { key: 'billing', label: 'Cobrança', icon: 'card-outline', soon: true },
-  { key: 'integrations', label: 'Integrações', icon: 'extension-puzzle-outline', soon: true },
+  { key: 'home', label: 'Início', icon: 'home-outline', href: '/' },
+  { key: 'tasks', label: 'Atividades', icon: 'checkbox-outline', href: '/tasks' },
+  { key: 'settings', label: 'Personalização', icon: 'settings-outline', href: '/settings' },
+  { key: 'profile', label: 'Perfil', icon: 'person-outline', href: '/profile' },
 ];
 
 export type SidebarLayoutSearchConfig = {
@@ -52,14 +50,15 @@ export type SidebarLayoutSearchConfig = {
 
 type SidebarLayoutProps = {
   children: React.ReactNode;
-  activeNavKey: 'tasks';
+  activeNavKey: SidebarNavKey;
   searchConfig: SidebarLayoutSearchConfig | null;
   topBarRight?: React.ReactNode;
-  /** Em desktop: seta voltar (telas secundárias) ou área vazia (tela principal). */
   desktopTopBarLeft: 'back' | 'empty';
-  /** FAB, modais extras, etc. (renderizado após o shell, dentro do SafeAreaView). */
   postContent?: React.ReactNode;
-  onSignOut?: () => void | Promise<void>;
+  mainVariant?: 'standard' | 'flush';
+  statusBarStyle?: 'light-content' | 'dark-content';
+  statusBarBackgroundColor?: string;
+  safeAreaBackgroundColor?: string;
 };
 
 export function SidebarLayout({
@@ -69,343 +68,231 @@ export function SidebarLayout({
   topBarRight,
   desktopTopBarLeft,
   postContent,
-  onSignOut,
+  mainVariant = 'standard',
+  statusBarStyle = 'light-content',
+  statusBarBackgroundColor,
+  safeAreaBackgroundColor,
 }: SidebarLayoutProps) {
+  const { theme } = usePersonalization();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const c = theme.colors;
+
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width: windowWidth } = useWindowDimensions();
-  const showDesktopSidebar = Platform.OS === 'web' && windowWidth >= SIDEBAR_BREAKPOINT;
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const onNavPress = useCallback(
     (item: NavItem) => {
-      if (item.soon) return;
-      if (item.href === '/') router.push('/');
-      setMobileMenuOpen(false);
+      router.push(item.href);
     },
     [router]
   );
 
-  const renderSidebarBody = (opts: { onNavigate?: () => void }) => (
-    <>
-      {searchConfig ? (
-        <View style={styles.sidebarSearchRow}>
-          <Ionicons name="search-outline" size={18} color={MUTED} style={styles.sidebarSearchIcon} />
-          <TextInput
-            style={styles.sidebarSearchInput}
-            placeholder="Buscar..."
-            placeholderTextColor="#9CA3AF"
-            value={searchConfig.value}
-            onChangeText={searchConfig.onChangeText}
-            autoCorrect={false}
-            autoCapitalize="none"
-          />
-          {searchConfig.value.length > 0 ? (
-            <TouchableOpacity onPress={searchConfig.onClear} hitSlop={12}>
-              <Ionicons name="close-circle" size={18} color={MUTED} />
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      ) : null}
+  const statusBg = statusBarBackgroundColor ?? APP_HEADER_PURPLE;
+  const safeBg = safeAreaBackgroundColor ?? APP_HEADER_PURPLE;
 
-      <ScrollView style={styles.navScroll} showsVerticalScrollIndicator={false}>
-        {NAV_ITEMS.map((item) => {
-          const active = item.key === activeNavKey;
-          return (
-            <TouchableOpacity
-              key={item.key}
-              style={[styles.navRow, active && styles.navRowActive]}
-              onPress={() => {
-                onNavPress(item);
-                opts.onNavigate?.();
-              }}
-              activeOpacity={0.7}>
-              <Ionicons
-                name={item.icon}
-                size={20}
-                color={active ? BLUE : MUTED}
-                style={styles.navIcon}
-              />
-              <Text style={[styles.navLabel, active && styles.navLabelActive]}>{item.label}</Text>
-              {item.soon ? <Text style={styles.navSoon}>em breve</Text> : null}
-            </TouchableOpacity>
-          );
-        })}
-        {onSignOut ? (
-          <TouchableOpacity
-            style={styles.navRow}
-            onPress={() => {
-              void onSignOut();
-              opts.onNavigate?.();
-            }}
-            activeOpacity={0.7}>
-            <Ionicons name="log-out-outline" size={20} color={MUTED} style={styles.navIcon} />
-            <Text style={styles.navLabel}>Sair</Text>
-          </TouchableOpacity>
-        ) : null}
-      </ScrollView>
-    </>
-  );
+  const showToolBar =
+    mainVariant === 'standard' && (desktopTopBarLeft === 'back' || topBarRight != null);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={BG_PAGE} />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: safeBg }]}>
+      <StatusBar barStyle={statusBarStyle} backgroundColor={statusBg} />
 
-      <View style={[styles.shell, { paddingTop: Platform.OS === 'ios' ? 0 : Math.max(insets.top, 8) }]}>
-        {showDesktopSidebar && !sidebarCollapsed ? (
-          <View style={[styles.sidebar, { width: SIDEBAR_W }]}>
-            <View style={styles.sidebarHeader}>
-              <Text style={styles.sidebarBrand}>ByteTasks</Text>
-              <TouchableOpacity
-                onPress={() => setSidebarCollapsed(true)}
-                hitSlop={10}
-                style={styles.collapseBtn}>
-                <Ionicons name="chevron-back" size={22} color={MUTED} />
-              </TouchableOpacity>
-            </View>
-            {renderSidebarBody({})}
+      <View style={[styles.shell, { paddingTop: Platform.OS === 'ios' ? 0 : Math.max(insets.top, theme.space(8)) }]}>
+        <View style={styles.appHeroHeader}>
+          <Text style={styles.appHeroTitle}>SeniorEase</Text>
+          <Text style={styles.appHeroSubtitle}>Plataforma de Inclusão Digital</Text>
+        </View>
+
+        <View style={[styles.mainColumn, { backgroundColor: c.bgPage }]}>
+          <View style={[styles.main, mainVariant === 'flush' && styles.mainFlush]}>
+            {showToolBar ? (
+              <View style={styles.mainTopBar}>
+                {desktopTopBarLeft === 'back' ? (
+                  <TouchableOpacity onPress={() => router.push('/')} style={styles.iconBtn}>
+                    <Ionicons name="arrow-back-outline" size={theme.icon(24)} color={c.text} />
+                  </TouchableOpacity>
+                ) : null}
+                <View style={styles.mainTopBarSpacer} />
+                <View style={styles.mainTopBarRight}>{topBarRight ?? null}</View>
+              </View>
+            ) : null}
+
+            {mainVariant === 'standard' && searchConfig ? (
+              <View style={styles.searchRow}>
+                <Ionicons name="search-outline" size={theme.icon(18)} color={c.muted} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder={searchConfig.mobilePlaceholder ?? 'Buscar...'}
+                  placeholderTextColor={c.placeholder}
+                  value={searchConfig.value}
+                  onChangeText={searchConfig.onChangeText}
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                />
+                {searchConfig.value.length > 0 ? (
+                  <TouchableOpacity onPress={searchConfig.onClear} hitSlop={12}>
+                    <Ionicons name="close-circle" size={theme.icon(18)} color={c.muted} />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            ) : null}
+
+            {children}
           </View>
-        ) : null}
+        </View>
 
-        {showDesktopSidebar && sidebarCollapsed ? (
-          <View style={styles.sidebarRail}>
-            <TouchableOpacity
-              onPress={() => setSidebarCollapsed(false)}
-              style={styles.railExpand}
-              hitSlop={8}>
-              <Ionicons name="chevron-forward" size={22} color={MUTED} />
-            </TouchableOpacity>
-          </View>
-        ) : null}
-
-        <View style={styles.main}>
-          <View style={styles.mainTopBar}>
-            {!showDesktopSidebar ? (
-              <TouchableOpacity onPress={() => setMobileMenuOpen(true)} style={styles.iconBtn}>
-                <Ionicons name="menu-outline" size={26} color={TEXT} />
-              </TouchableOpacity>
-            ) : desktopTopBarLeft === 'back' ? (
-              <TouchableOpacity onPress={() => router.push('/')} style={styles.iconBtn}>
-                <Ionicons name="arrow-back-outline" size={24} color={TEXT} />
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.topBarLeftSpacer} />
-            )}
-            <View style={styles.mainTopBarRight}>{topBarRight ?? null}</View>
-          </View>
-
-          {searchConfig && !showDesktopSidebar ? (
-            <View style={styles.mobileSearch}>
-              <Ionicons name="search-outline" size={18} color={MUTED} />
-              <TextInput
-                style={styles.mobileSearchInput}
-                placeholder={searchConfig.mobilePlaceholder ?? 'Buscar...'}
-                placeholderTextColor="#9CA3AF"
-                value={searchConfig.value}
-                onChangeText={searchConfig.onChangeText}
-                autoCorrect={false}
-                autoCapitalize="none"
-              />
-              {searchConfig.value.length > 0 ? (
-                <TouchableOpacity onPress={searchConfig.onClear}>
-                  <Ionicons name="close-circle" size={18} color={MUTED} />
+        <View
+          style={[
+            styles.bottomNav,
+            {
+              paddingBottom:
+                Platform.OS === 'android'
+                  ? Math.max(insets.bottom, theme.space(6))
+                  : theme.space(6),
+            },
+          ]}>
+          <View style={styles.bottomNavRow}>
+            {NAV_ITEMS.map((item) => {
+              const active = item.key === activeNavKey;
+              return (
+                <TouchableOpacity
+                  key={item.key}
+                  style={[styles.bottomNavItem, active && styles.bottomNavItemActive]}
+                  onPress={() => onNavPress(item)}
+                  activeOpacity={0.7}>
+                  <Ionicons
+                    name={item.icon}
+                    size={theme.icon(24)}
+                    color={active ? c.navAccent : c.navInactive}
+                  />
+                  <Text style={[styles.bottomNavLabel, active && styles.bottomNavLabelActive]} numberOfLines={1}>
+                    {item.label}
+                  </Text>
                 </TouchableOpacity>
-              ) : null}
-            </View>
-          ) : null}
-
-          {children}
+              );
+            })}
+          </View>
         </View>
       </View>
 
       {postContent}
-
-      <Modal
-        visible={mobileMenuOpen}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setMobileMenuOpen(false)}>
-        <View style={styles.drawerOverlay}>
-          <Pressable style={styles.drawerScrim} onPress={() => setMobileMenuOpen(false)} />
-          <View style={[styles.drawerPanel, { paddingTop: insets.top + 12 }]}>
-            <View style={styles.drawerHeader}>
-              <Text style={styles.drawerTitle}>Menu</Text>
-              <TouchableOpacity onPress={() => setMobileMenuOpen(false)} hitSlop={12}>
-                <Ionicons name="close" size={26} color={TEXT} />
-              </TouchableOpacity>
-            </View>
-            {renderSidebarBody({ onNavigate: () => setMobileMenuOpen(false) })}
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: BG_PAGE,
-  },
-  shell: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  sidebar: {
-    backgroundColor: CARD,
-    borderRightWidth: 1,
-    borderRightColor: BORDER,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  sidebarHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: BORDER,
-    marginBottom: 12,
-  },
-  sidebarBrand: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: TEXT,
-  },
-  collapseBtn: {
-    padding: 4,
-  },
-  sidebarSearchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginBottom: 16,
-    backgroundColor: BG_PAGE,
-  },
-  sidebarSearchIcon: {
-    marginRight: 8,
-  },
-  sidebarSearchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: TEXT,
-    paddingVertical: 4,
-  },
-  navScroll: {
-    flexGrow: 0,
-  },
-  navRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  navRowActive: {
-    backgroundColor: '#EFF6FF',
-  },
-  navIcon: {
-    marginRight: 12,
-    width: 24,
-  },
-  navLabel: {
-    flex: 1,
-    fontSize: 15,
-    color: MUTED,
-    fontWeight: '500',
-  },
-  navLabelActive: {
-    color: BLUE,
-    fontWeight: '600',
-  },
-  navSoon: {
-    fontSize: 11,
-    color: '#9CA3AF',
-  },
-  sidebarRail: {
-    width: 44,
-    backgroundColor: CARD,
-    borderRightWidth: 1,
-    borderRightColor: BORDER,
-    alignItems: 'center',
-    paddingTop: 16,
-  },
-  railExpand: {
-    padding: 8,
-  },
-  main: {
-    flex: 1,
-    minWidth: 0,
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-  },
-  mainTopBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-  },
-  topBarLeftSpacer: {
-    width: 38,
-    height: 38,
-  },
-  mainTopBarRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  iconBtn: {
-    padding: 6,
-  },
-  mobileSearch: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1,
-    borderColor: BORDER,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 16,
-    backgroundColor: CARD,
-  },
-  mobileSearchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: TEXT,
-  },
-  drawerOverlay: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  drawerScrim: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-  drawerPanel: {
-    width: Math.min(SIDEBAR_W + 24, 300),
-    maxWidth: '85%',
-    backgroundColor: CARD,
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-    borderRightWidth: 1,
-    borderRightColor: BORDER,
-  },
-  drawerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  drawerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: TEXT,
-  },
-});
+function createStyles(theme: AppTheme) {
+  const c = theme.colors;
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: c.bgPage,
+    },
+    shell: {
+      flex: 1,
+      flexDirection: 'column',
+    },
+    appHeroHeader: {
+      backgroundColor: APP_HEADER_PURPLE,
+      paddingHorizontal: theme.space(20),
+      paddingTop: theme.space(12),
+      paddingBottom: theme.space(20),
+    },
+    appHeroTitle: {
+      fontSize: theme.font(28),
+      fontWeight: '800',
+      color: '#FFFFFF',
+      letterSpacing: -0.5,
+    },
+    appHeroSubtitle: {
+      marginTop: theme.space(6),
+      fontSize: theme.font(16),
+      color: 'rgba(255,255,255,0.92)',
+      fontWeight: '500',
+    },
+    mainColumn: {
+      flex: 1,
+      minWidth: 0,
+      minHeight: 0,
+    },
+    main: {
+      flex: 1,
+      minWidth: 0,
+      minHeight: 0,
+      paddingHorizontal: theme.space(20),
+      paddingBottom: theme.space(16),
+    },
+    mainFlush: {
+      paddingHorizontal: 0,
+    },
+    mainTopBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: theme.space(8),
+    },
+    mainTopBarSpacer: {
+      flex: 1,
+      minWidth: 0,
+    },
+    mainTopBarRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.space(4),
+    },
+    iconBtn: {
+      padding: theme.space(6),
+    },
+    searchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.space(10),
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: theme.space(8),
+      paddingHorizontal: theme.space(12),
+      paddingVertical: theme.space(10),
+      marginBottom: theme.space(16),
+      backgroundColor: c.card,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: theme.font(15),
+      color: c.text,
+    },
+    bottomNav: {
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+      backgroundColor: c.card,
+    },
+    bottomNavRow: {
+      flexDirection: 'row',
+      alignItems: 'stretch',
+    },
+    bottomNavItem: {
+      flex: 1,
+      minWidth: 0,
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: theme.space(8),
+      paddingBottom: theme.space(8),
+      paddingHorizontal: theme.space(2),
+      borderBottomWidth: 3,
+      borderBottomColor: 'transparent',
+      backgroundColor: 'transparent',
+    },
+    bottomNavItemActive: {
+      backgroundColor: c.navActiveBg,
+      borderBottomColor: c.navAccent,
+    },
+    bottomNavLabel: {
+      marginTop: theme.space(4),
+      fontSize: theme.font(10),
+      color: c.navInactive,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+    bottomNavLabelActive: {
+      color: c.navAccent,
+    },
+  });
+}

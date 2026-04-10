@@ -105,7 +105,7 @@ export default function SignupScreen() {
               style={styles.backBtn}>
               <Ionicons name="arrow-back" size={24} color={TEXT} />
             </TouchableOpacity>
-            <Text style={styles.brand}>ByteTasks</Text>
+            <Text style={styles.brand}>SeniorEase</Text>
             <View style={styles.topBarSpacer} />
           </View>
 
@@ -121,11 +121,6 @@ export default function SignupScreen() {
 
           <View style={styles.card}>
             <Text style={styles.title}>Criar conta</Text>
-            <Text style={styles.subtitle}>
-              Novos usuarios sao gravados no json-server (recurso <Text style={styles.subtitleEm}>users</Text> em{' '}
-              <Text style={styles.subtitleEm}>db.json</Text>) com <Text style={styles.subtitleEm}>POST /users</Text>.
-            </Text>
-
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Nome</Text>
               <TextInput
@@ -230,10 +225,6 @@ export default function SignupScreen() {
                 Entrar
               </Link>
             </View>
-
-            <Text style={styles.apiHint} selectable>
-              API json-server: {API_BASE_URL}
-            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

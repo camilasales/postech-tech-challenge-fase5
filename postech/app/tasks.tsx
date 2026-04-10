@@ -2,11 +2,11 @@ import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { HomeScreen } from '@/screens/HomeScreen';
+import { TaskListScreen } from '@/screens/TaskListScreen';
 
 const BLUE = '#2563EB';
 
-export default function Index() {
+export default function TasksRoute() {
   const { user, initializing } = useAuth();
 
   if (initializing) {
@@ -21,7 +21,7 @@ export default function Index() {
     return <Redirect href="/login" />;
   }
 
-  return <HomeScreen />;
+  return <TaskListScreen />;
 }
 
 const styles = StyleSheet.create({

@@ -54,6 +54,11 @@ async function apiPatch<T>(path: string, body: unknown): Promise<T> {
   return parseBody<T>(res);
 }
 
+async function apiDelete(path: string): Promise<void> {
+  const res = await safeFetch(`${API_BASE_URL}${path}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`json-server respondeu com erro HTTP ${res.status}.`);
+}
+
 type UserRow = { id: number; email: string; password: string; name: string };
 
 export async function loginWithEmailPassword(email: string, password: string): Promise<AppUser> {
@@ -162,4 +167,8 @@ export async function patchReminderCompleted(id: string, completed: boolean): Pr
     completed,
     updatedAt: new Date().toISOString(),
   });
+}
+
+export async function deleteReminder(id: string): Promise<void> {
+  await apiDelete(`/reminders/${encodeURIComponent(id)}`);
 }
