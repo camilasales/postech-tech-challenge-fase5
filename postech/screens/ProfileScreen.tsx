@@ -6,13 +6,14 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
-  Alert,
   Modal,
   Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SidebarLayout, APP_HEADER_PURPLE } from '@/components/SidebarLayout';
+import { EditProfileModal } from '@/components/EditProfileModal';
+import type { ProfileEditablePayload } from '@/types/user';
 import type { AppTheme } from '@/context/PersonalizationContext';
 import { usePersonalization } from '@/context/PersonalizationContext';
 import { useAuth } from '@/context/AuthContext';
@@ -51,8 +52,9 @@ export function ProfileScreen() {
   const { theme } = usePersonalization();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
-  const { user, signOutUser } = useAuth();
+  const { user, signOutUser, updateProfile } = useAuth();
   const [signOutModalVisible, setSignOutModalVisible] = useState(false);
+  const [editProfileVisible, setEditProfileVisible] = useState(false);
 
   const handleSignOut = useCallback(async () => {
     setSignOutModalVisible(false);
@@ -61,8 +63,15 @@ export function ProfileScreen() {
   }, [router, signOutUser]);
 
   const onPressEdit = useCallback(() => {
-    Alert.alert('Editar perfil', 'Esta função estará disponível em breve.');
+    setEditProfileVisible(true);
   }, []);
+
+  const handleSaveProfile = useCallback(
+    async (payload: ProfileEditablePayload) => {
+      await updateProfile(payload);
+    },
+    [updateProfile]
+  );
 
   if (!user) {
     return null;
@@ -70,6 +79,8 @@ export function ProfileScreen() {
 
   const fullName = displayOrDash(user.name);
   const email = displayOrDash(user.email);
+  const phone = displayOrDash(user.phone);
+  const address = displayOrDash(user.address);
 
   return (
     <SidebarLayout activeNavKey="profile" desktopTopBarLeft="empty" searchConfig={null} topBarRight={null}>
@@ -120,17 +131,11 @@ export function ProfileScreen() {
             theme={theme}
             styles={styles}
           />
-          <InfoField
-            icon="call-outline"
-            label="Telefone"
-            value="Não informado"
-            theme={theme}
-            styles={styles}
-          />
+          <InfoField icon="call-outline" label="Telefone" value={phone} theme={theme} styles={styles} />
           <InfoField
             icon="location-outline"
             label="Endereço"
-            value="Não informado"
+            value={address}
             theme={theme}
             styles={styles}
           />
@@ -146,6 +151,13 @@ export function ProfileScreen() {
           <Text style={styles.signOutBtnText}>Sair</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <EditProfileModal
+        visible={editProfileVisible}
+        user={user}
+        onClose={() => setEditProfileVisible(false)}
+        onSave={handleSaveProfile}
+      />
 
       <Modal
         visible={signOutModalVisible}

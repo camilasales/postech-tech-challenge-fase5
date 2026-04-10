@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { AppUser } from '@/types/user';
+import type { AppUser, ProfileEditablePayload } from '@/types/user';
 
 const STORAGE_KEY = '@postech/auth_user';
 
@@ -9,6 +9,7 @@ type AuthContextValue = {
   initializing: boolean;
   signIn: (user: AppUser) => Promise<void>;
   signOutUser: () => Promise<void>;
+  updateProfile: (payload: ProfileEditablePayload) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -46,14 +47,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateProfile = useCallback(async (payload: ProfileEditablePayload) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next: AppUser = {
+        ...prev,
+        name: payload.name.trim(),
+        phone: payload.phone.trim(),
+        address: payload.address.trim(),
+      };
+      void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
       initializing,
       signIn,
       signOutUser,
+      updateProfile,
     }),
-    [user, initializing, signIn, signOutUser]
+    [user, initializing, signIn, signOutUser, updateProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
