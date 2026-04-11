@@ -8,6 +8,7 @@ import {
   Pressable,
   ScrollView,
   Platform,
+  Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -15,6 +16,7 @@ import {
   type AppTheme,
   type ContrastPreset,
   type FontSizePreset,
+  type InterfaceModePreset,
   type SpacingPreset,
 } from '@/context/PersonalizationContext';
 
@@ -31,13 +33,18 @@ const FONT_OPTIONS: { key: FontSizePreset; label: string }[] = [
 const CONTRAST_OPTIONS: { key: ContrastPreset; label: string }[] = [
   { key: 'default', label: 'Normal' },
   { key: 'high', label: 'Alto' },
-  { key: 'max', label: 'Máximo' },
+  { key: 'max', label: 'Maximo' },
 ];
 
 const SPACING_OPTIONS: { key: SpacingPreset; label: string }[] = [
   { key: 'compact', label: 'Normal' },
-  { key: 'normal', label: 'Confortável' },
-  { key: 'relaxed', label: 'Espaçoso' },
+  { key: 'normal', label: 'Confortavel' },
+  { key: 'relaxed', label: 'Espacoso' },
+];
+
+const INTERFACE_MODE_OPTIONS: { key: InterfaceModePreset; label: string }[] = [
+  { key: 'basic', label: 'Basico' },
+  { key: 'advanced', label: 'Avancado' },
 ];
 
 type SegmentOption<T extends string> = { key: T; label: string };
@@ -75,16 +82,16 @@ function SettingCard<T extends string>({
       </View>
       <Text style={styles.cardDescription}>{description}</Text>
       <View style={styles.segmentRow}>
-        {options.map((opt) => {
-          const active = value === opt.key;
+        {options.map((option) => {
+          const active = option.key === value;
           return (
             <TouchableOpacity
-              key={opt.key}
+              key={option.key}
               style={[styles.segment, active && styles.segmentActive]}
-              onPress={() => onChange(opt.key)}
+              onPress={() => onChange(option.key)}
               activeOpacity={0.88}>
               <Text style={[styles.segmentText, active && styles.segmentTextActive]} numberOfLines={1}>
-                {opt.label}
+                {option.label}
               </Text>
             </TouchableOpacity>
           );
@@ -94,60 +101,149 @@ function SettingCard<T extends string>({
   );
 }
 
-/** Controles de personalização (fonte, contraste, espaçamento) para uso em página ou modal. */
+function ToggleCard({
+  iconName,
+  title,
+  description,
+  value,
+  onChange,
+  styles,
+  theme,
+}: {
+  iconName: keyof typeof Ionicons.glyphMap;
+  title: string;
+  description: string;
+  value: boolean;
+  onChange: (value: boolean) => void;
+  styles: ReturnType<typeof createFormStyles>;
+  theme: AppTheme;
+}) {
+  return (
+    <View style={styles.card}>
+      <View style={styles.toggleHeaderRow}>
+        <View style={styles.toggleTextCol}>
+          <View style={styles.cardTitleRow}>
+            <Ionicons name={iconName} size={theme.icon(26)} color={BRAND_PURPLE} />
+            <Text style={styles.cardTitle}>{title}</Text>
+          </View>
+          <Text style={styles.cardDescription}>{description}</Text>
+        </View>
+        <Switch
+          value={value}
+          onValueChange={onChange}
+          trackColor={{ false: '#D1D5DB', true: '#C4B5FD' }}
+          thumbColor={value ? BRAND_PURPLE : '#FFFFFF'}
+        />
+      </View>
+      <Text style={styles.toggleStateText}>{value ? 'Ativado' : 'Desativado'}</Text>
+    </View>
+  );
+}
+
 export function PersonalizationForm() {
-  const { settings, setFontSize, setContrast, setSpacing, resetToDefaults, theme } =
-    usePersonalization();
-  const formStyles = useMemo(() => createFormStyles(theme), [theme]);
+  const {
+    settings,
+    setFontSize,
+    setContrast,
+    setSpacing,
+    setInterfaceMode,
+    setEnhancedFeedback,
+    setExtraConfirmations,
+    setReminderNotifications,
+    resetToDefaults,
+    theme,
+  } = usePersonalization();
+  const styles = useMemo(() => createFormStyles(theme), [theme]);
 
   return (
     <View>
       <SettingCard
         icon={
-          <View style={formStyles.fontIconWrap}>
-            <Text style={formStyles.fontIconT}>T</Text>
+          <View style={styles.fontIconWrap}>
+            <Text style={styles.fontIconT}>T</Text>
           </View>
         }
         title="Tamanho da Fonte"
-        description="Escolha o tamanho de letra mais confortável para você ler:"
+        description="Escolha o tamanho de letra mais confortavel para a leitura."
         options={FONT_OPTIONS}
         value={settings.fontSize}
         onChange={setFontSize}
-        styles={formStyles}
+        styles={styles}
         theme={theme}
       />
 
       <SettingCard
         iconName="contrast-outline"
-        title="Nível de Contraste"
-        description="Aumente o contraste para facilitar a leitura:"
+        title="Nivel de Contraste"
+        description="Aumente o contraste para facilitar a leitura."
         options={CONTRAST_OPTIONS}
         value={settings.contrast}
         onChange={setContrast}
-        styles={formStyles}
+        styles={styles}
         theme={theme}
       />
 
       <SettingCard
         iconName="expand-outline"
-        title="Espaçamento"
-        description="Ajuste o espaço entre os elementos da tela:"
+        title="Espacamento"
+        description="Ajuste o espaco entre os elementos da tela."
         options={SPACING_OPTIONS}
         value={settings.spacing}
         onChange={setSpacing}
-        styles={formStyles}
+        styles={styles}
+        theme={theme}
+      />
+
+      <SettingCard
+        iconName="layers-outline"
+        title="Modo de Interface"
+        description="Use o modo basico para reduzir informacoes e distracoes."
+        options={INTERFACE_MODE_OPTIONS}
+        value={settings.interfaceMode}
+        onChange={setInterfaceMode}
+        styles={styles}
+        theme={theme}
+      />
+
+      <ToggleCard
+        iconName="sparkles-outline"
+        title="Feedback Visual Reforcado"
+        description="Mostra confirmacoes visuais mais claras apos as suas acoes."
+        value={settings.enhancedFeedback}
+        onChange={setEnhancedFeedback}
+        styles={styles}
+        theme={theme}
+      />
+
+      <ToggleCard
+        iconName="shield-checkmark-outline"
+        title="Confirmacoes Extras"
+        description="Pede confirmacao antes de acoes importantes."
+        value={settings.extraConfirmations}
+        onChange={setExtraConfirmations}
+        styles={styles}
+        theme={theme}
+      />
+
+      <ToggleCard
+        iconName="notifications-outline"
+        title="Lembretes e Notificacoes"
+        description="Mantem avisos de lembrete ativos na sua experiencia."
+        value={settings.reminderNotifications}
+        onChange={setReminderNotifications}
+        styles={styles}
         theme={theme}
       />
 
       <TouchableOpacity
-        style={formStyles.resetBtn}
+        style={styles.resetBtn}
         onPress={resetToDefaults}
         activeOpacity={0.9}
         accessibilityRole="button"
-        accessibilityLabel="Restaurar configurações padrão">
-        <View style={formStyles.resetBtnInner}>
+        accessibilityLabel="Restaurar configuracoes padrao">
+        <View style={styles.resetBtnInner}>
           <Ionicons name="refresh-outline" size={theme.icon(22)} color="#FFFFFF" />
-          <Text style={formStyles.resetBtnText}>Restaurar Configurações Padrão</Text>
+          <Text style={styles.resetBtnText}>Restaurar Configuracoes Padrao</Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -161,27 +257,27 @@ type PersonalizationPanelProps = {
 
 export function PersonalizationPanel({ visible, onClose }: PersonalizationPanelProps) {
   const { theme } = usePersonalization();
-  const modalStyles = useMemo(() => createModalStyles(theme), [theme]);
-  const c = theme.colors;
+  const styles = useMemo(() => createModalStyles(theme), [theme]);
+  const colors = theme.colors;
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={modalStyles.overlay}>
-        <Pressable style={modalStyles.scrim} onPress={onClose} />
-        <View style={modalStyles.sheet}>
-          <View style={modalStyles.header}>
+      <View style={styles.overlay}>
+        <Pressable style={styles.scrim} onPress={onClose} />
+        <View style={styles.sheet}>
+          <View style={styles.header}>
             <View>
-              <Text style={modalStyles.title}>Personalização</Text>
-              <Text style={modalStyles.subtitle}>Ajuste a plataforma do seu jeito</Text>
+              <Text style={styles.title}>Personalizacao</Text>
+              <Text style={styles.subtitle}>Ajuste a plataforma do seu jeito</Text>
             </View>
             <TouchableOpacity onPress={onClose} hitSlop={12} accessibilityLabel="Fechar">
-              <Ionicons name="close" size={theme.icon(26)} color={c.text} />
+              <Ionicons name="close" size={theme.icon(26)} color={colors.text} />
             </TouchableOpacity>
           </View>
 
           <ScrollView
-            style={modalStyles.scroll}
-            contentContainerStyle={modalStyles.scrollContent}
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
             <PersonalizationForm />
@@ -193,7 +289,7 @@ export function PersonalizationPanel({ visible, onClose }: PersonalizationPanelP
 }
 
 function createModalStyles(theme: AppTheme) {
-  const c = theme.colors;
+  const colors = theme.colors;
   return StyleSheet.create({
     overlay: {
       flex: 1,
@@ -204,12 +300,12 @@ function createModalStyles(theme: AppTheme) {
       backgroundColor: 'rgba(0,0,0,0.45)',
     },
     sheet: {
-      backgroundColor: c.bgPage,
+      backgroundColor: colors.bgPage,
       borderTopLeftRadius: theme.space(16),
       borderTopRightRadius: theme.space(16),
       maxHeight: '88%',
       borderWidth: 1,
-      borderColor: c.border,
+      borderColor: colors.border,
       borderBottomWidth: 0,
     },
     header: {
@@ -220,20 +316,20 @@ function createModalStyles(theme: AppTheme) {
       paddingTop: theme.space(20),
       paddingBottom: theme.space(16),
       borderBottomWidth: 1,
-      borderBottomColor: c.border,
+      borderBottomColor: colors.border,
     },
     title: {
       fontSize: theme.font(18),
       fontWeight: '700',
-      color: c.text,
+      color: colors.text,
     },
     subtitle: {
       fontSize: theme.font(13),
-      color: c.muted,
+      color: colors.muted,
       marginTop: theme.space(4),
     },
     scroll: {
-      maxHeight: 480,
+      maxHeight: 520,
     },
     scrollContent: {
       paddingHorizontal: theme.space(20),
@@ -325,6 +421,21 @@ function createFormStyles(theme: AppTheme) {
     },
     segmentTextActive: {
       color: '#FFFFFF',
+    },
+    toggleHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.space(12),
+    },
+    toggleTextCol: {
+      flex: 1,
+      minWidth: 0,
+    },
+    toggleStateText: {
+      marginTop: theme.space(8),
+      fontSize: theme.font(13),
+      fontWeight: '700',
+      color: BRAND_PURPLE,
     },
     resetBtn: {
       marginTop: theme.space(20),

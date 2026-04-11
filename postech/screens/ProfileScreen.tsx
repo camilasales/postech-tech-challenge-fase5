@@ -24,8 +24,8 @@ const FIELD_BOX_BG = '#F9FAFB';
 const FIELD_BOX_BORDER = '#E5E7EB';
 
 function displayOrDash(value: string | undefined | null): string {
-  const t = value?.trim() ?? '';
-  return t.length > 0 ? t : 'Não informado';
+  const text = value?.trim() ?? '';
+  return text.length > 0 ? text : 'Nao informado';
 }
 
 type InfoFieldProps = {
@@ -49,7 +49,7 @@ function InfoField({ icon, label, value, theme, styles }: InfoFieldProps) {
 }
 
 export function ProfileScreen() {
-  const { theme } = usePersonalization();
+  const { theme, settings } = usePersonalization();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
   const { user, signOutUser, updateProfile } = useAuth();
@@ -62,10 +62,6 @@ export function ProfileScreen() {
     router.replace('/login');
   }, [router, signOutUser]);
 
-  const onPressEdit = useCallback(() => {
-    setEditProfileVisible(true);
-  }, []);
-
   const handleSaveProfile = useCallback(
     async (payload: ProfileEditablePayload) => {
       await updateProfile(payload);
@@ -73,9 +69,7 @@ export function ProfileScreen() {
     [updateProfile]
   );
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   const fullName = displayOrDash(user.name);
   const email = displayOrDash(user.email);
@@ -92,7 +86,7 @@ export function ProfileScreen() {
           <Ionicons name="person-outline" size={theme.icon(36)} color="#FFFFFF" />
           <View style={styles.heroTextCol}>
             <Text style={styles.heroTitle}>Meu Perfil</Text>
-            <Text style={styles.heroSubtitle}>Suas informações pessoais</Text>
+            <Text style={styles.heroSubtitle}>Suas informacoes pessoais</Text>
           </View>
         </View>
 
@@ -100,50 +94,38 @@ export function ProfileScreen() {
           <View style={[styles.avatarCircle, { backgroundColor: PROFILE_HERO_GREEN }]}>
             <Ionicons name="person" size={theme.icon(40)} color="#FFFFFF" />
           </View>
-          <Text style={styles.avatarLabel}>Usuário</Text>
+          <Text style={styles.avatarLabel}>Usuario</Text>
         </View>
 
         <View style={styles.infoCard}>
           <View style={styles.infoCardHeader}>
-            <Text style={styles.infoCardTitle}>Informações Pessoais</Text>
+            <Text style={styles.infoCardTitle}>Informacoes Pessoais</Text>
             <TouchableOpacity
               style={[styles.editBtn, { backgroundColor: APP_HEADER_PURPLE }]}
-              onPress={onPressEdit}
+              onPress={() => setEditProfileVisible(true)}
               activeOpacity={0.88}
               accessibilityRole="button"
-              accessibilityLabel="Editar informações pessoais">
+              accessibilityLabel="Editar informacoes pessoais">
               <Ionicons name="create-outline" size={theme.icon(18)} color="#FFFFFF" />
               <Text style={styles.editBtnText}>Editar</Text>
             </TouchableOpacity>
           </View>
 
-          <InfoField
-            icon="person-outline"
-            label="Nome Completo"
-            value={fullName}
-            theme={theme}
-            styles={styles}
-          />
-          <InfoField
-            icon="mail-outline"
-            label="E-mail"
-            value={email}
-            theme={theme}
-            styles={styles}
-          />
+          <InfoField icon="person-outline" label="Nome Completo" value={fullName} theme={theme} styles={styles} />
+          <InfoField icon="mail-outline" label="E-mail" value={email} theme={theme} styles={styles} />
           <InfoField icon="call-outline" label="Telefone" value={phone} theme={theme} styles={styles} />
-          <InfoField
-            icon="location-outline"
-            label="Endereço"
-            value={address}
-            theme={theme}
-            styles={styles}
-          />
+          <InfoField icon="location-outline" label="Endereco" value={address} theme={theme} styles={styles} />
         </View>
 
         <TouchableOpacity
           style={styles.signOutBtn}
-          onPress={() => setSignOutModalVisible(true)}
+          onPress={() => {
+            if (settings.extraConfirmations) {
+              setSignOutModalVisible(true);
+              return;
+            }
+            void handleSignOut();
+          }}
           activeOpacity={0.88}
           accessibilityRole="button"
           accessibilityLabel="Sair da conta">
@@ -159,48 +141,50 @@ export function ProfileScreen() {
         onSave={handleSaveProfile}
       />
 
-      <Modal
-        visible={signOutModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSignOutModalVisible(false)}
-        accessibilityViewIsModal>
-        <View style={styles.signOutModalRoot}>
-          <Pressable
-            style={[StyleSheet.absoluteFillObject, styles.signOutModalBackdrop]}
-            onPress={() => setSignOutModalVisible(false)}
-            accessibilityLabel="Fechar diálogo"
-          />
-          <View style={styles.signOutModalCenter} pointerEvents="box-none">
-            <View style={styles.signOutModalCard}>
-              <Text style={styles.signOutModalTitle}>Sair da conta?</Text>
-              <Text style={styles.signOutModalMessage}>
-                Você precisará entrar novamente para acessar o SeniorEase.
-              </Text>
-              <View style={styles.signOutModalActions}>
-                <TouchableOpacity
-                  style={styles.signOutModalBtnGhost}
-                  onPress={() => setSignOutModalVisible(false)}
-                  activeOpacity={0.88}>
-                  <Text style={styles.signOutModalBtnGhostText}>Cancelar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.signOutModalBtnDanger}
-                  onPress={() => void handleSignOut()}
-                  activeOpacity={0.88}>
-                  <Text style={styles.signOutModalBtnDangerText}>Sair</Text>
-                </TouchableOpacity>
+      {settings.extraConfirmations ? (
+        <Modal
+          visible={signOutModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setSignOutModalVisible(false)}
+          accessibilityViewIsModal>
+          <View style={styles.signOutModalRoot}>
+            <Pressable
+              style={[StyleSheet.absoluteFillObject, styles.signOutModalBackdrop]}
+              onPress={() => setSignOutModalVisible(false)}
+              accessibilityLabel="Fechar dialogo"
+            />
+            <View style={styles.signOutModalCenter} pointerEvents="box-none">
+              <View style={styles.signOutModalCard}>
+                <Text style={styles.signOutModalTitle}>Sair da conta?</Text>
+                <Text style={styles.signOutModalMessage}>
+                  Voce precisara entrar novamente para acessar o SeniorEase.
+                </Text>
+                <View style={styles.signOutModalActions}>
+                  <TouchableOpacity
+                    style={styles.signOutModalBtnGhost}
+                    onPress={() => setSignOutModalVisible(false)}
+                    activeOpacity={0.88}>
+                    <Text style={styles.signOutModalBtnGhostText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.signOutModalBtnDanger}
+                    onPress={() => void handleSignOut()}
+                    activeOpacity={0.88}>
+                    <Text style={styles.signOutModalBtnDangerText}>Sair</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      ) : null}
     </SidebarLayout>
   );
 }
 
 function createStyles(theme: AppTheme) {
-  const c = theme.colors;
+  const colors = theme.colors;
   const cardShadow =
     Platform.OS === 'web'
       ? { boxShadow: '0 2px 10px rgba(15, 23, 42, 0.08)' }
@@ -215,7 +199,7 @@ function createStyles(theme: AppTheme) {
   return StyleSheet.create({
     scroll: {
       flex: 1,
-      backgroundColor: c.bgPage,
+      backgroundColor: colors.bgPage,
     },
     scrollContent: {
       paddingHorizontal: theme.space(16),

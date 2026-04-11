@@ -8,7 +8,9 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "test": "vitest run",
+    "build:web": "expo export --platform web",
     "server": "json-server --watch db.json --port 3001",
     "server:android": "json-server --watch db.json --host 0.0.0.0 --port 3001"
   },
@@ -30,6 +32,7 @@
     "expo-image": "~3.0.10",
     "expo-image-picker": "~17.0.10",
     "expo-linking": "~8.0.8",
+    "expo-notifications": "^55.0.18",
     "expo-router": "~6.0.14",
     "expo-splash-screen": "~31.0.10",
     "expo-status-bar": "~3.0.8",
@@ -54,7 +57,8 @@
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "json-server": "^0.17.4",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.4"
   },
   "private": true
 }

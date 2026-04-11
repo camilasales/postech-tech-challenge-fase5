@@ -26,7 +26,7 @@ export function SettingsScreen() {
             <Ionicons name="settings-outline" size={theme.icon(26)} color={APP_HEADER_PURPLE} />
           </View>
           <View style={styles.heroTextCol}>
-            <Text style={styles.heroTitle}>Personalização</Text>
+            <Text style={styles.heroTitle}>Personalizacao</Text>
             <Text style={styles.heroSubtitle}>Ajuste a plataforma do seu jeito</Text>
           </View>
         </View>
