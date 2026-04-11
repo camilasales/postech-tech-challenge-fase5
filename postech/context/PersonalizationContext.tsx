@@ -13,11 +13,16 @@ const STORAGE_KEY = '@postech/personalization';
 export type FontSizePreset = 'small' | 'medium' | 'large';
 export type ContrastPreset = 'default' | 'high' | 'max';
 export type SpacingPreset = 'compact' | 'normal' | 'relaxed';
+export type InterfaceModePreset = 'basic' | 'advanced';
 
 export type PersonalizationSettings = {
   fontSize: FontSizePreset;
   contrast: ContrastPreset;
   spacing: SpacingPreset;
+  interfaceMode: InterfaceModePreset;
+  enhancedFeedback: boolean;
+  extraConfirmations: boolean;
+  reminderNotifications: boolean;
 };
 
 export type ThemeColors = {
@@ -56,6 +61,10 @@ const DEFAULT_SETTINGS: PersonalizationSettings = {
   fontSize: 'medium',
   contrast: 'default',
   spacing: 'normal',
+  interfaceMode: 'basic',
+  enhancedFeedback: true,
+  extraConfirmations: true,
+  reminderNotifications: true,
 };
 
 const FONT_MULT: Record<FontSizePreset, number> = {
@@ -159,6 +168,10 @@ type PersonalizationContextValue = {
   setFontSize: (v: FontSizePreset) => void;
   setContrast: (v: ContrastPreset) => void;
   setSpacing: (v: SpacingPreset) => void;
+  setInterfaceMode: (v: InterfaceModePreset) => void;
+  setEnhancedFeedback: (v: boolean) => void;
+  setExtraConfirmations: (v: boolean) => void;
+  setReminderNotifications: (v: boolean) => void;
   resetToDefaults: () => void;
   initializing: boolean;
 };
@@ -168,20 +181,37 @@ const PersonalizationContext = createContext<PersonalizationContextValue | undef
 function parseStored(raw: string | null): PersonalizationSettings {
   if (!raw) return DEFAULT_SETTINGS;
   try {
-    const o = JSON.parse(raw) as Partial<PersonalizationSettings>;
-    const fontSize =
-      o.fontSize === 'small' || o.fontSize === 'medium' || o.fontSize === 'large'
-        ? o.fontSize
-        : DEFAULT_SETTINGS.fontSize;
-    const contrast =
-      o.contrast === 'default' || o.contrast === 'high' || o.contrast === 'max'
-        ? o.contrast
-        : DEFAULT_SETTINGS.contrast;
-    const spacing =
-      o.spacing === 'compact' || o.spacing === 'normal' || o.spacing === 'relaxed'
-        ? o.spacing
-        : DEFAULT_SETTINGS.spacing;
-    return { fontSize, contrast, spacing };
+    const value = JSON.parse(raw) as Partial<PersonalizationSettings>;
+    return {
+      fontSize:
+        value.fontSize === 'small' || value.fontSize === 'medium' || value.fontSize === 'large'
+          ? value.fontSize
+          : DEFAULT_SETTINGS.fontSize,
+      contrast:
+        value.contrast === 'default' || value.contrast === 'high' || value.contrast === 'max'
+          ? value.contrast
+          : DEFAULT_SETTINGS.contrast,
+      spacing:
+        value.spacing === 'compact' || value.spacing === 'normal' || value.spacing === 'relaxed'
+          ? value.spacing
+          : DEFAULT_SETTINGS.spacing,
+      interfaceMode:
+        value.interfaceMode === 'basic' || value.interfaceMode === 'advanced'
+          ? value.interfaceMode
+          : DEFAULT_SETTINGS.interfaceMode,
+      enhancedFeedback:
+        typeof value.enhancedFeedback === 'boolean'
+          ? value.enhancedFeedback
+          : DEFAULT_SETTINGS.enhancedFeedback,
+      extraConfirmations:
+        typeof value.extraConfirmations === 'boolean'
+          ? value.extraConfirmations
+          : DEFAULT_SETTINGS.extraConfirmations,
+      reminderNotifications:
+        typeof value.reminderNotifications === 'boolean'
+          ? value.reminderNotifications
+          : DEFAULT_SETTINGS.reminderNotifications,
+    };
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -210,29 +240,44 @@ export function PersonalizationProvider({ children }: { children: React.ReactNod
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   }, []);
 
+  const updateSettings = useCallback(
+    (updater: (current: PersonalizationSettings) => PersonalizationSettings) => {
+      setSettings((current) => {
+        const next = updater(current);
+        void persist(next);
+        return next;
+      });
+    },
+    [persist]
+  );
+
   const setFontSize = useCallback((fontSize: FontSizePreset) => {
-    setSettings((s) => {
-      const next = { ...s, fontSize };
-      void persist(next);
-      return next;
-    });
-  }, [persist]);
+    updateSettings((current) => ({ ...current, fontSize }));
+  }, [updateSettings]);
 
   const setContrast = useCallback((contrast: ContrastPreset) => {
-    setSettings((s) => {
-      const next = { ...s, contrast };
-      void persist(next);
-      return next;
-    });
-  }, [persist]);
+    updateSettings((current) => ({ ...current, contrast }));
+  }, [updateSettings]);
 
   const setSpacing = useCallback((spacing: SpacingPreset) => {
-    setSettings((s) => {
-      const next = { ...s, spacing };
-      void persist(next);
-      return next;
-    });
-  }, [persist]);
+    updateSettings((current) => ({ ...current, spacing }));
+  }, [updateSettings]);
+
+  const setInterfaceMode = useCallback((interfaceMode: InterfaceModePreset) => {
+    updateSettings((current) => ({ ...current, interfaceMode }));
+  }, [updateSettings]);
+
+  const setEnhancedFeedback = useCallback((enhancedFeedback: boolean) => {
+    updateSettings((current) => ({ ...current, enhancedFeedback }));
+  }, [updateSettings]);
+
+  const setExtraConfirmations = useCallback((extraConfirmations: boolean) => {
+    updateSettings((current) => ({ ...current, extraConfirmations }));
+  }, [updateSettings]);
+
+  const setReminderNotifications = useCallback((reminderNotifications: boolean) => {
+    updateSettings((current) => ({ ...current, reminderNotifications }));
+  }, [updateSettings]);
 
   const resetToDefaults = useCallback(() => {
     setSettings(DEFAULT_SETTINGS);
@@ -248,10 +293,26 @@ export function PersonalizationProvider({ children }: { children: React.ReactNod
       setFontSize,
       setContrast,
       setSpacing,
+      setInterfaceMode,
+      setEnhancedFeedback,
+      setExtraConfirmations,
+      setReminderNotifications,
       resetToDefaults,
       initializing,
     }),
-    [settings, theme, setFontSize, setContrast, setSpacing, resetToDefaults, initializing]
+    [
+      settings,
+      theme,
+      setFontSize,
+      setContrast,
+      setSpacing,
+      setInterfaceMode,
+      setEnhancedFeedback,
+      setExtraConfirmations,
+      setReminderNotifications,
+      resetToDefaults,
+      initializing,
+    ]
   );
 
   return (

@@ -10,6 +10,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { createReminder } from '@/services/api';
@@ -31,6 +32,13 @@ const LABEL_MUTED = '#6B7280';
 const TITLE_TEXT = '#111827';
 const CANCEL_GREY = '#6B7280';
 const PRIMARY_ACTION_BLUE = '#2563EB';
+const STEP_INACTIVE_BG = '#E5E7EB';
+
+const STEPS = [
+  { id: 'details', title: 'Detalhes' },
+  { id: 'schedule', title: 'Horario' },
+  { id: 'review', title: 'Revisao' },
+] as const;
 
 type AddActivityFormProps = {
   onCancel: () => void;
@@ -45,15 +53,19 @@ export function AddActivityForm({ onCancel, onSaved }: AddActivityFormProps) {
 
   const initialSchedule = useMemo(() => defaultScheduleDateTimeStrings(), []);
 
+  const [currentStep, setCurrentStep] = useState(0);
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [date, setDate] = useState(initialSchedule.date);
   const [time, setTime] = useState(initialSchedule.time);
 
+  const scheduledAt = useMemo(() => combineDateTime(date, time), [date, time]);
+  const detailStepValid = title.trim().length > 0;
+  const scheduleStepValid = parseDate(date) !== null && parseTime(time) !== null && scheduledAt !== null;
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) throw new Error('Usuario nao autenticado.');
-      const scheduledAt = combineDateTime(date, time);
       if (!scheduledAt) throw new Error('Data ou hora invalida.');
       const description = buildActivityDescription(title, notes);
       await createReminder({
@@ -64,6 +76,7 @@ export function AddActivityForm({ onCancel, onSaved }: AddActivityFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reminders'] });
+      setCurrentStep(0);
       setTitle('');
       setNotes('');
       const next = defaultScheduleDateTimeStrings();
@@ -77,108 +90,214 @@ export function AddActivityForm({ onCancel, onSaved }: AddActivityFormProps) {
     },
   });
 
+  const canSave = detailStepValid && scheduleStepValid && !saveMutation.isPending;
+
+  const handleNext = useCallback(() => {
+    if (currentStep === 0 && !detailStepValid) {
+      Alert.alert('Erro', 'Informe o titulo da atividade para continuar.');
+      return;
+    }
+    if (currentStep === 1 && !scheduleStepValid) {
+      Alert.alert('Erro', 'Informe data e hora validas para continuar.');
+      return;
+    }
+    setCurrentStep((step) => Math.min(step + 1, STEPS.length - 1));
+  }, [currentStep, detailStepValid, scheduleStepValid]);
+
+  const handleBack = useCallback(() => {
+    setCurrentStep((step) => Math.max(step - 1, 0));
+  }, []);
+
   const handleSave = useCallback(() => {
-    if (!title.trim()) {
+    if (!detailStepValid) {
       Alert.alert('Erro', 'Informe o titulo da atividade.');
       return;
     }
-    if (!combineDateTime(date, time)) {
+    if (!scheduleStepValid) {
       Alert.alert('Erro', 'Data ou hora invalida. Use DD/MM/AAAA e HH:MM (24h).');
       return;
     }
     saveMutation.mutate();
-  }, [title, date, time, saveMutation]);
-
-  const canSave =
-    title.trim().length > 0 &&
-    parseDate(date) !== null &&
-    parseTime(time) !== null &&
-    !saveMutation.isPending;
+  }, [detailStepValid, scheduleStepValid, saveMutation]);
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.keyboardWrap}>
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Nova Atividade</Text>
-
-        <Text style={styles.label}>
-          Título da Atividade <Text style={styles.required}>*</Text>
+        <Text style={styles.cardTitle}>Nova atividade guiada</Text>
+        <Text style={styles.cardSubtitle}>
+          Passo {currentStep + 1} de {STEPS.length}: {STEPS[currentStep].title}
         </Text>
-        <TextInput
-          style={[styles.inputTitle, { borderColor: PRIMARY_ACTION_BLUE }]}
-          placeholder="Ex: Consulta médica"
-          placeholderTextColor="#9CA3AF"
-          value={title}
-          onChangeText={setTitle}
-          maxLength={120}
-          accessibilityLabel="Título da atividade"
-        />
 
-        <Text style={styles.label}>
-          Data <Text style={styles.required}>*</Text>
-        </Text>
-        <TextInput
-          style={[styles.inputDateTime, { borderColor: INPUT_MUTED_BORDER }]}
-          placeholder="DD/MM/AAAA"
-          placeholderTextColor="#9CA3AF"
-          value={date}
-          onChangeText={(t) => setDate(formatDateInput(t))}
-          keyboardType="numeric"
-          maxLength={10}
-          accessibilityLabel="Data da atividade"
-        />
+        <View style={styles.stepRow}>
+          {STEPS.map((step, index) => {
+            const active = index === currentStep;
+            const done = index < currentStep;
+            return (
+              <View key={step.id} style={styles.stepItem}>
+                <View
+                  style={[
+                    styles.stepCircle,
+                    active && styles.stepCircleActive,
+                    done && styles.stepCircleDone,
+                  ]}>
+                  <Text style={styles.stepCircleText}>{done ? 'OK' : index + 1}</Text>
+                </View>
+                <Text style={[styles.stepLabel, active && styles.stepLabelActive]}>{step.title}</Text>
+              </View>
+            );
+          })}
+        </View>
 
-        <Text style={styles.label}>
-          Hora <Text style={styles.required}>*</Text>
-        </Text>
-        <TextInput
-          style={[styles.inputDateTime, { borderColor: INPUT_MUTED_BORDER }]}
-          placeholder="HH:MM (24 horas)"
-          placeholderTextColor="#9CA3AF"
-          value={time}
-          onChangeText={(t) => setTime(formatTimeInput(t))}
-          keyboardType="numeric"
-          maxLength={5}
-          accessibilityLabel="Hora da atividade"
-        />
+        {currentStep === 0 ? (
+          <View>
+            <Text style={styles.sectionTitle}>Passo 1: descreva a atividade</Text>
+            <Text style={styles.sectionText}>
+              Comece com um titulo claro. Depois, se quiser, adicione observacoes.
+            </Text>
 
-<Text style={styles.label}>Descrição (Opcional)</Text>
-        <TextInput
-          style={[styles.inputNotes, { borderColor: INPUT_MUTED_BORDER }]}
-          placeholder="Ex: Levar exames anteriores"
-          placeholderTextColor="#9CA3AF"
-          value={notes}
-          onChangeText={setNotes}
-          multiline
-          textAlignVertical="top"
-          maxLength={400}
-          accessibilityLabel="Descrição opcional"
-        />
+            <Text style={styles.label}>
+              Titulo da atividade <Text style={styles.required}>*</Text>
+            </Text>
+            <TextInput
+              style={[styles.inputTitle, { borderColor: PRIMARY_ACTION_BLUE }]}
+              placeholder="Ex: Consulta medica"
+              placeholderTextColor="#9CA3AF"
+              value={title}
+              onChangeText={setTitle}
+              maxLength={120}
+              accessibilityLabel="Titulo da atividade"
+            />
 
-        <TouchableOpacity
-          style={[
-            styles.btnSave,
-            { backgroundColor: PRIMARY_ACTION_BLUE },
-            (!canSave || saveMutation.isPending) && styles.btnDisabled,
-          ]}
-          onPress={handleSave}
-          disabled={!canSave}
-          activeOpacity={0.88}>
-          {saveMutation.isPending ? (
-            <ActivityIndicator color="#fff" />
+            <Text style={styles.label}>Descricao opcional</Text>
+            <TextInput
+              style={[styles.inputNotes, { borderColor: INPUT_MUTED_BORDER }]}
+              placeholder="Ex: Levar exames anteriores"
+              placeholderTextColor="#9CA3AF"
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              textAlignVertical="top"
+              maxLength={400}
+              accessibilityLabel="Descricao opcional"
+            />
+          </View>
+        ) : null}
+
+        {currentStep === 1 ? (
+          <View>
+            <Text style={styles.sectionTitle}>Passo 2: escolha quando lembrar</Text>
+            <Text style={styles.sectionText}>
+              Informe a data e a hora. O aplicativo vai usar esses dados para exibir o lembrete.
+            </Text>
+
+            <Text style={styles.label}>
+              Data <Text style={styles.required}>*</Text>
+            </Text>
+            <TextInput
+              style={[styles.inputDateTime, { borderColor: INPUT_MUTED_BORDER }]}
+              placeholder="DD/MM/AAAA"
+              placeholderTextColor="#9CA3AF"
+              value={date}
+              onChangeText={(text) => setDate(formatDateInput(text))}
+              keyboardType="numeric"
+              maxLength={10}
+              accessibilityLabel="Data da atividade"
+            />
+
+            <Text style={styles.label}>
+              Hora <Text style={styles.required}>*</Text>
+            </Text>
+            <TextInput
+              style={[styles.inputDateTime, { borderColor: INPUT_MUTED_BORDER }]}
+              placeholder="HH:MM"
+              placeholderTextColor="#9CA3AF"
+              value={time}
+              onChangeText={(text) => setTime(formatTimeInput(text))}
+              keyboardType="numeric"
+              maxLength={5}
+              accessibilityLabel="Hora da atividade"
+            />
+          </View>
+        ) : null}
+
+        {currentStep === 2 ? (
+          <View>
+            <Text style={styles.sectionTitle}>Passo 3: revise antes de salvar</Text>
+            <Text style={styles.sectionText}>
+              Confira as informacoes abaixo. Se estiver tudo certo, salve a atividade.
+            </Text>
+
+            <View style={styles.reviewCard}>
+              <View style={styles.reviewRow}>
+                <Text style={styles.reviewLabel}>Titulo</Text>
+                <Text style={styles.reviewValue}>{title.trim() || '-'}</Text>
+              </View>
+              <View style={styles.reviewRow}>
+                <Text style={styles.reviewLabel}>Descricao</Text>
+                <Text style={styles.reviewValue}>{notes.trim() || 'Sem observacoes'}</Text>
+              </View>
+              <View style={styles.reviewRow}>
+                <Text style={styles.reviewLabel}>Data</Text>
+                <Text style={styles.reviewValue}>{date}</Text>
+              </View>
+              <View style={styles.reviewRow}>
+                <Text style={styles.reviewLabel}>Hora</Text>
+                <Text style={styles.reviewValue}>{time}</Text>
+              </View>
+            </View>
+          </View>
+        ) : null}
+
+        <View style={styles.actionsRow}>
+          {currentStep > 0 ? (
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.backBtn]}
+              onPress={handleBack}
+              disabled={saveMutation.isPending}
+              activeOpacity={0.88}>
+              <Text style={styles.backBtnText}>Voltar</Text>
+            </TouchableOpacity>
           ) : (
-            <Text style={styles.btnSaveText}>Salvar Atividade</Text>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.cancelBtn]}
+              onPress={onCancel}
+              disabled={saveMutation.isPending}
+              activeOpacity={0.88}>
+              <Text style={styles.cancelBtnText}>Cancelar</Text>
+            </TouchableOpacity>
           )}
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.btnCancel, { backgroundColor: CANCEL_GREY }]}
-          onPress={onCancel}
-          activeOpacity={0.88}
-          disabled={saveMutation.isPending}>
-          <Text style={styles.btnCancelText}>Cancelar</Text>
-        </TouchableOpacity>
+          {currentStep < STEPS.length - 1 ? (
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.primaryBtn]}
+              onPress={handleNext}
+              disabled={saveMutation.isPending}
+              activeOpacity={0.88}>
+              <Text style={styles.primaryBtnText}>Continuar</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.actionBtn,
+                styles.primaryBtn,
+                (!canSave || saveMutation.isPending) && styles.btnDisabled,
+              ]}
+              onPress={handleSave}
+              disabled={!canSave || saveMutation.isPending}
+              activeOpacity={0.88}>
+              {saveMutation.isPending ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <View style={styles.primaryBtnContent}>
+                  <Ionicons name="checkmark-circle-outline" size={theme.icon(18)} color="#FFFFFF" />
+                  <Text style={styles.primaryBtnText}>Salvar atividade</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -209,7 +328,64 @@ function createStyles(theme: AppTheme) {
       fontSize: theme.font(18),
       fontWeight: '800',
       color: TITLE_TEXT,
+    },
+    cardSubtitle: {
+      marginTop: theme.space(4),
       marginBottom: theme.space(18),
+      fontSize: theme.font(13),
+      color: LABEL_MUTED,
+      lineHeight: theme.font(19),
+    },
+    stepRow: {
+      flexDirection: 'row',
+      gap: theme.space(10),
+      marginBottom: theme.space(18),
+    },
+    stepItem: {
+      flex: 1,
+      alignItems: 'center',
+      minWidth: 0,
+    },
+    stepCircle: {
+      width: theme.space(30),
+      height: theme.space(30),
+      borderRadius: theme.space(15),
+      backgroundColor: STEP_INACTIVE_BG,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    stepCircleActive: {
+      backgroundColor: PRIMARY_ACTION_BLUE,
+    },
+    stepCircleDone: {
+      backgroundColor: '#16A34A',
+    },
+    stepCircleText: {
+      color: '#FFFFFF',
+      fontSize: theme.font(12),
+      fontWeight: '800',
+    },
+    stepLabel: {
+      marginTop: theme.space(6),
+      fontSize: theme.font(12),
+      color: LABEL_MUTED,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    stepLabelActive: {
+      color: TITLE_TEXT,
+    },
+    sectionTitle: {
+      fontSize: theme.font(16),
+      fontWeight: '800',
+      color: TITLE_TEXT,
+      marginBottom: theme.space(6),
+    },
+    sectionText: {
+      fontSize: theme.font(14),
+      color: LABEL_MUTED,
+      lineHeight: theme.font(20),
+      marginBottom: theme.space(16),
     },
     label: {
       fontSize: theme.font(13),
@@ -251,27 +427,69 @@ function createStyles(theme: AppTheme) {
       backgroundColor: '#FFFFFF',
       marginBottom: theme.space(16),
     },
-    btnSave: {
+    reviewCard: {
+      borderWidth: 1,
+      borderColor: INPUT_MUTED_BORDER,
+      borderRadius: theme.space(12),
+      backgroundColor: '#F9FAFB',
+      padding: theme.space(14),
+      gap: theme.space(12),
+    },
+    reviewRow: {
+      gap: theme.space(4),
+    },
+    reviewLabel: {
+      fontSize: theme.font(12),
+      fontWeight: '700',
+      color: LABEL_MUTED,
+      textTransform: 'uppercase',
+    },
+    reviewValue: {
+      fontSize: theme.font(15),
+      color: TITLE_TEXT,
+      lineHeight: theme.font(21),
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      gap: theme.space(12),
+      marginTop: theme.space(8),
+    },
+    actionBtn: {
+      flex: 1,
       borderRadius: theme.space(12),
       paddingVertical: theme.space(15),
       alignItems: 'center',
       justifyContent: 'center',
     },
-    btnSaveText: {
+    primaryBtn: {
+      backgroundColor: PRIMARY_ACTION_BLUE,
+    },
+    primaryBtnContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.space(8),
+    },
+    primaryBtnText: {
       color: '#FFFFFF',
       fontSize: theme.font(16),
       fontWeight: '800',
     },
-    btnCancel: {
-      marginTop: theme.space(12),
-      borderRadius: theme.space(12),
-      paddingVertical: theme.space(15),
-      alignItems: 'center',
-      justifyContent: 'center',
+    backBtn: {
+      backgroundColor: '#FFFFFF',
+      borderWidth: 1,
+      borderColor: INPUT_MUTED_BORDER,
     },
-    btnCancelText: {
+    backBtnText: {
+      color: TITLE_TEXT,
+      fontSize: theme.font(15),
+      fontWeight: '700',
+    },
+    cancelBtn: {
+      backgroundColor: CANCEL_GREY,
+    },
+    cancelBtnText: {
       color: '#FFFFFF',
-      fontSize: theme.font(16),
+      fontSize: theme.font(15),
       fontWeight: '700',
     },
     btnDisabled: {

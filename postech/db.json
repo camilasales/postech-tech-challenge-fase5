@@ -1,7 +1,7 @@
 {
   "users": [
     {
-      "name": "teste",
+      "name": "Maria Helena Souza",
       "email": "teste@teste.com",
       "password": "teste1234",
       "id": 1
@@ -10,63 +10,63 @@
   "reminders": [
     {
       "userId": 1,
-      "description": "teste",
-      "scheduledAt": "2022-02-02T14:11:00.000Z",
-      "completed": true,
-      "commentCount": 0,
-      "attachmentCount": 0,
-      "tag": {
-        "name": "Geral",
-        "color": "#8B5CF6"
-      },
-      "createdAt": "2026-04-06T19:16:29.879Z",
-      "id": 1,
-      "updatedAt": "2026-04-09T01:04:49.071Z"
-    },
-    {
-      "userId": 1,
-      "description": "testete\nteste de novo",
-      "scheduledAt": "2026-04-12T01:22:00.000Z",
-      "completed": true,
-      "commentCount": 0,
-      "attachmentCount": 0,
-      "tag": {
-        "name": "Geral",
-        "color": "#8B5CF6"
-      },
-      "createdAt": "2026-04-10T15:17:06.395Z",
-      "id": 2,
-      "updatedAt": "2026-04-10T19:49:56.793Z"
-    },
-    {
-      "userId": 1,
-      "description": "teste2 aaa",
-      "scheduledAt": "2026-04-12T01:22:00.000Z",
+      "description": "Tomar remedio da pressao apos o cafe da manha",
+      "scheduledAt": "2026-04-11T11:30:00.000Z",
       "completed": false,
       "commentCount": 0,
       "attachmentCount": 0,
       "tag": {
-        "name": "Geral",
-        "color": "#8B5CF6"
+        "name": "Saude",
+        "color": "#EF4444"
       },
-      "createdAt": "2026-04-10T16:59:51.291Z",
-      "id": 3,
-      "updatedAt": "2026-04-10T19:49:41.641Z"
+      "createdAt": "2026-04-10T20:15:00.000Z",
+      "id": 1,
+      "updatedAt": "2026-04-10T20:15:00.000Z"
     },
     {
       "userId": 1,
-      "description": "teste",
-      "scheduledAt": "2026-04-11T12:00:00.000Z",
+      "description": "Consulta com o cardiologista no posto de saude",
+      "scheduledAt": "2026-04-12T13:00:00.000Z",
+      "completed": false,
+      "commentCount": 0,
+      "attachmentCount": 0,
+      "tag": {
+        "name": "Consultas",
+        "color": "#2563EB"
+      },
+      "createdAt": "2026-04-10T20:16:00.000Z",
+      "id": 2,
+      "updatedAt": "2026-04-10T20:16:00.000Z"
+    },
+    {
+      "userId": 1,
+      "description": "Pagar a conta de energia pela internet",
+      "scheduledAt": "2026-04-13T17:00:00.000Z",
+      "completed": false,
+      "commentCount": 0,
+      "attachmentCount": 0,
+      "tag": {
+        "name": "Financeiro",
+        "color": "#F59E0B"
+      },
+      "createdAt": "2026-04-10T20:17:00.000Z",
+      "id": 3,
+      "updatedAt": "2026-04-10T20:17:00.000Z"
+    },
+    {
+      "userId": 1,
+      "description": "Videochamada com a neta no fim da tarde",
+      "scheduledAt": "2026-04-11T21:00:00.000Z",
       "completed": true,
       "commentCount": 0,
       "attachmentCount": 0,
       "tag": {
-        "name": "Geral",
-        "color": "#8B5CF6"
+        "name": "Familia",
+        "color": "#10B981"
       },
-      "createdAt": "2026-04-10T19:44:16.254Z",
+      "createdAt": "2026-04-10T20:18:00.000Z",
       "id": 4,
-      "updatedAt": "2026-04-10T19:49:50.605Z"
+      "updatedAt": "2026-04-10T20:18:00.000Z"
     }
   ]
 }
