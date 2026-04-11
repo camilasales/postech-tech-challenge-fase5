@@ -11,10 +11,14 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SidebarLayout } from '@/components/SidebarLayout';
-import type { AppTheme } from '@/context/PersonalizationContext';
-import type { ContrastPreset, FontSizePreset, SpacingPreset } from '@/context/PersonalizationContext';
-import { usePersonalization } from '@/context/PersonalizationContext';
-import { useAuth } from '@/context/AuthContext';
+import {
+  usePersonalization,
+  type AppTheme,
+  type ContrastPreset,
+  type FontSizePreset,
+  type InterfaceModePreset,
+  type SpacingPreset,
+} from '@/context/PersonalizationContext';
 
 const GREETING_BANNER_BG = '#4b00e0';
 const CARD_TASK = '#4F46E5';
@@ -26,40 +30,39 @@ const TIP_TITLE = '#EA580C';
 const TIP_TEXT = '#9A3412';
 
 function greetingPeriod(): string {
-  const h = new Date().getHours();
-  if (h < 12) return 'Bom dia';
-  if (h < 18) return 'Boa tarde';
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Bom dia';
+  if (hour < 18) return 'Boa tarde';
   return 'Boa noite';
 }
 
-function labelFontSize(s: FontSizePreset): string {
-  const m = { small: 'Normal', medium: 'Grande', large: 'Extra Grande' };
-  return m[s];
+function labelFontSize(value: FontSizePreset): string {
+  const map = { small: 'Normal', medium: 'Grande', large: 'Extra Grande' };
+  return map[value];
 }
 
-function labelContrast(s: ContrastPreset): string {
-  const m = { default: 'Normal', high: 'Alto', max: 'Máximo' };
-  return m[s];
+function labelContrast(value: ContrastPreset): string {
+  const map = { default: 'Normal', high: 'Alto', max: 'Maximo' };
+  return map[value];
 }
 
-function labelSpacing(s: SpacingPreset): string {
-  const m = {
-    compact: 'Normal',
-    normal: 'Confortável',
-    relaxed: 'Espaçoso',
-  };
-  return m[s];
+function labelSpacing(value: SpacingPreset): string {
+  const map = { compact: 'Normal', normal: 'Confortavel', relaxed: 'Espacoso' };
+  return map[value];
 }
 
-function labelFeedback(contrast: ContrastPreset): string {
-  return contrast === 'default' ? 'Padrão' : 'Ativado';
+function labelInterfaceMode(value: InterfaceModePreset): string {
+  return value === 'basic' ? 'Basico' : 'Avancado';
+}
+
+function labelToggle(value: boolean, enabled: string, disabled: string): string {
+  return value ? enabled : disabled;
 }
 
 export function HomeScreen() {
   const { theme, settings } = usePersonalization();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useRouter();
-  const { user } = useAuth();
   const { width } = useWindowDimensions();
   const stackCards = width < 560;
 
@@ -89,7 +92,7 @@ export function HomeScreen() {
         </View>
 
         <View style={styles.body}>
-          <Text style={styles.sectionTitle}>Acesso Rápido</Text>
+          <Text style={styles.sectionTitle}>Acesso Rapido</Text>
           <View style={[styles.quickRow, stackCards && styles.quickRowStack]}>
             <TouchableOpacity
               style={[styles.quickCard, { backgroundColor: CARD_TASK }]}
@@ -105,7 +108,7 @@ export function HomeScreen() {
               activeOpacity={0.9}>
               <Ionicons name="settings-outline" size={theme.icon(32)} color="#FFFFFF" />
               <Text style={styles.quickCardTitle}>Personalizar</Text>
-              <Text style={styles.quickCardDesc}>Ajustar tamanho de texto e cores</Text>
+              <Text style={styles.quickCardDesc}>Ajustar tamanho de texto, modo e cores</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.quickCard, { backgroundColor: CARD_PROFILE }]}
@@ -113,7 +116,7 @@ export function HomeScreen() {
               activeOpacity={0.9}>
               <Ionicons name="person-outline" size={theme.icon(32)} color="#FFFFFF" />
               <Text style={styles.quickCardTitle}>Meu Perfil</Text>
-              <Text style={styles.quickCardDesc}>Ver e editar suas informações</Text>
+              <Text style={styles.quickCardDesc}>Ver e editar suas informacoes</Text>
             </TouchableOpacity>
           </View>
 
@@ -122,15 +125,15 @@ export function HomeScreen() {
             <View style={styles.tipTextWrap}>
               <Text style={styles.tipTitle}>Dica do Dia</Text>
               <Text style={styles.tipBody}>
-                Você pode ajustar o tamanho das letras e o contraste da tela na seção{' '}
-                <Text style={styles.tipBold}>Personalização</Text>. Experimente até encontrar o que é
-                mais confortável para você!
+                Ajuste o tamanho das letras, o contraste e o modo da interface na secao{' '}
+                <Text style={styles.tipBold}>Personalizacao</Text> ate encontrar a combinacao mais
+                confortavel para voce.
               </Text>
             </View>
           </View>
 
           <View style={styles.settingsCard}>
-            <Text style={styles.settingsCardTitle}>Suas Configurações Atuais</Text>
+            <Text style={styles.settingsCardTitle}>Suas Configuracoes Atuais</Text>
             <View style={styles.settingsGrid}>
               <View style={styles.settingsCell}>
                 <Text style={styles.settingsLabel}>Tamanho da Fonte:</Text>
@@ -141,12 +144,30 @@ export function HomeScreen() {
                 <Text style={styles.settingsValue}>{labelContrast(settings.contrast)}</Text>
               </View>
               <View style={styles.settingsCell}>
-                <Text style={styles.settingsLabel}>Modo de Interface:</Text>
+                <Text style={styles.settingsLabel}>Espacamento:</Text>
                 <Text style={styles.settingsValue}>{labelSpacing(settings.spacing)}</Text>
               </View>
               <View style={styles.settingsCell}>
+                <Text style={styles.settingsLabel}>Modo de Interface:</Text>
+                <Text style={styles.settingsValue}>{labelInterfaceMode(settings.interfaceMode)}</Text>
+              </View>
+              <View style={styles.settingsCell}>
                 <Text style={styles.settingsLabel}>Feedback Visual:</Text>
-                <Text style={styles.settingsValue}>{labelFeedback(settings.contrast)}</Text>
+                <Text style={styles.settingsValue}>
+                  {labelToggle(settings.enhancedFeedback, 'Reforcado', 'Padrao')}
+                </Text>
+              </View>
+              <View style={styles.settingsCell}>
+                <Text style={styles.settingsLabel}>Confirmacoes Extras:</Text>
+                <Text style={styles.settingsValue}>
+                  {labelToggle(settings.extraConfirmations, 'Ativas', 'Desativadas')}
+                </Text>
+              </View>
+              <View style={styles.settingsCell}>
+                <Text style={styles.settingsLabel}>Notificacoes:</Text>
+                <Text style={styles.settingsValue}>
+                  {labelToggle(settings.reminderNotifications, 'Ativas', 'Desativadas')}
+                </Text>
               </View>
             </View>
           </View>
@@ -159,12 +180,10 @@ export function HomeScreen() {
 const GREETING_BANNER_HEIGHT = 152;
 
 function createStyles(theme: AppTheme) {
-  const c = theme.colors;
+  const colors = theme.colors;
   const shadow =
     Platform.OS === 'web'
-      ? {
-          boxShadow: '0px 4px 14px rgba(0,0,0,0.08)',
-        }
+      ? { boxShadow: '0px 4px 14px rgba(0,0,0,0.08)' }
       : {
           elevation: 3,
           shadowColor: '#000',
@@ -176,7 +195,7 @@ function createStyles(theme: AppTheme) {
   return StyleSheet.create({
     scroll: {
       flex: 1,
-      backgroundColor: c.bgPage,
+      backgroundColor: colors.bgPage,
     },
     scrollContent: {
       paddingBottom: theme.space(24),
@@ -228,7 +247,7 @@ function createStyles(theme: AppTheme) {
     sectionTitle: {
       fontSize: theme.font(20),
       fontWeight: '800',
-      color: c.text,
+      color: colors.text,
       marginBottom: theme.space(14),
     },
     quickRow: {
@@ -288,9 +307,9 @@ function createStyles(theme: AppTheme) {
     },
     settingsCard: {
       marginTop: theme.space(22),
-      backgroundColor: c.card,
+      backgroundColor: colors.card,
       borderWidth: 1,
-      borderColor: c.border,
+      borderColor: colors.border,
       borderRadius: theme.space(14),
       padding: theme.space(18),
       ...shadow,
@@ -298,7 +317,7 @@ function createStyles(theme: AppTheme) {
     settingsCardTitle: {
       fontSize: theme.font(18),
       fontWeight: '800',
-      color: c.text,
+      color: colors.text,
       marginBottom: theme.space(16),
     },
     settingsGrid: {
@@ -311,26 +330,20 @@ function createStyles(theme: AppTheme) {
       flexGrow: 1,
       minWidth: theme.space(120),
       borderWidth: 1,
-      borderColor: c.border,
+      borderColor: colors.border,
       borderRadius: theme.space(10),
       padding: theme.space(14),
-      backgroundColor: c.bgPage,
+      backgroundColor: colors.bgPage,
     },
     settingsLabel: {
       fontSize: theme.font(14),
-      color: c.muted,
+      color: colors.muted,
       marginBottom: theme.space(6),
     },
     settingsValue: {
       fontSize: theme.font(16),
       fontWeight: '800',
-      color: c.text,
-    },
-    signedHint: {
-      marginTop: theme.space(20),
-      fontSize: theme.font(13),
-      color: c.muted,
-      textAlign: 'center',
+      color: colors.text,
     },
   });
 }

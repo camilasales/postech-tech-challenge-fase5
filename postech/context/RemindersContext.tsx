@@ -1,8 +1,13 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Reminder, ReminderSummary } from '@/types/reminder';
 import { fetchRemindersForUser } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
+import { usePersonalization } from '@/context/PersonalizationContext';
+import {
+  clearReminderNotificationsForUser,
+  syncReminderNotificationsForUser,
+} from '@/services/reminderNotifications';
 
 interface RemindersContextData {
   reminders: Reminder[];
@@ -31,6 +36,8 @@ function isSameCalendarDay(a: Date, b: Date): boolean {
 
 export function RemindersProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const { settings } = usePersonalization();
+  const previousUserIdRef = useRef<string | null>(null);
   const {
     data: reminders = [],
     isLoading,
@@ -62,6 +69,24 @@ export function RemindersProvider({ children }: { children: React.ReactNode }) {
       dueTodayPending,
     };
   }, [reminders]);
+
+  useEffect(() => {
+    const previousUserId = previousUserIdRef.current;
+    if (previousUserId && previousUserId !== user?.id) {
+      void clearReminderNotificationsForUser(previousUserId);
+    }
+    previousUserIdRef.current = user?.id ?? null;
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    void syncReminderNotificationsForUser({
+      userId: user.id,
+      reminders,
+      enabled: settings.reminderNotifications,
+    });
+  }, [user?.id, reminders, settings.reminderNotifications]);
 
   return (
     <RemindersContext.Provider

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Byte Bank",
-    "slug": "byte-bank",
+    "name": "SeniorEase",
+    "slug": "seniorease",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "bytebank",
+    "scheme": "seniorease",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.carlos.rocha.postech"
+      "package": "com.carlos.rocha.seniorease"
     },
     "web": {
       "output": "static",
@@ -28,6 +28,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-notifications",
       [
         "expo-splash-screen",
         {

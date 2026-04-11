@@ -1,49 +1,81 @@
-# Byte Bank (Expo + Firebase)
+# SeniorEase
 
-Aplicativo mobile de gerenciamento financeiro com login, cadastro, extrato de transacoes, filtros e anexos.
+Aplicacao em Expo React Native para web e mobile focada em acessibilidade digital para idosos, com personalizacao de leitura, organizacao simples de atividades e perfil do usuario.
 
 ## Funcionalidades
 
-- Autenticacao com Firebase (login, cadastro e recuperar senha)
-- Listagem de transacoes com filtros e paginacao
-- Adicionar e editar transacoes
-- Anexos salvos como base64 no Firestore
+- Login e cadastro com persistencia local da sessao
+- Painel de personalizacao com ajuste de fonte, contraste, espacamento, modo de interface e confirmacoes extras
+- Lista de atividades com criacao, edicao, conclusao e filtros
+- Perfil do usuario com edicao de nome, telefone e endereco
+- Execucao em web e mobile a partir da mesma base
+
+## Arquitetura
+
+O projeto segue Clean Architecture com separacao por camadas:
+
+- `src/domain`: entidades, contratos de repositorio e casos de uso (sem dependencia de UI)
+- `src/data`: datasources, mappers e implementacoes concretas dos repositorios
+- `src/di`: injecao de dependencias via `ServiceLocator`
+- `src/presentation`: exemplos de integracao da camada de apresentacao com casos de uso
+
+Status atual:
+
+- Estrutura base de Clean Architecture implementada
+- Casos de uso independentes de UI
+- Adaptadores e interfaces definidos
 
 ## Requisitos
 
 - Node.js 18+
 - NPM 9+
-- Expo CLI (via `npx`)
-- Android Studio (para emulador) ou dispositivo fisico
 
-## Dependencias
+## Instalacao
 
 ```bash
 npm install
 ```
 
-## Configuracao do Firebase
+## Como rodar
 
-A integracao com Firebase (Auth + Firestore) ja esta configurada no projeto. Se precisar ajustar as chaves:
-
-- Arquivo: `postech/app.json`
-- Secao: `expo.extra.firebase`
-
-O bloco ja esta preenchido no arquivo do projeto.
-
-## Rodando o app
+Em um terminal:
 
 ```bash
-npx expo start
+npm run server
 ```
 
-Android (porta fixa):
+Em outro terminal:
+
+```bash
+npm run start
+```
+
+Para abrir direto na web:
+
+```bash
+npm run web
+```
+
+Para Android:
 
 ```bash
 npm run start:android
 ```
 
+## Usuario de teste
+
+- Email: `teste@teste.com`
+- Senha: `teste1234`
+
+## Scripts uteis
+
+- `npm run lint`: valida o codigo com ESLint
+- `npm run test`: executa os testes com Vitest
+- `npm run build:web`: gera a build estatica web
+- `npm run server`: sobe o json-server na porta `3001`
+
 ## Observacoes
 
-- As transacoes sao salvas no Firestore com `userId`.
-- Anexos sao armazenados como base64 no Firestore (sem Storage).
+- O backend local usa `json-server` com dados em `db.json`
+- Em dispositivo fisico, defina `EXPO_PUBLIC_JSON_SERVER_URL` com o IP da sua maquina se necessario
+- A pipeline de CI do repositorio roda instalacao, lint, testes e build web

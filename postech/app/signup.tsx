@@ -19,7 +19,6 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { registerUser } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
-import { API_BASE_URL } from "@/config/api";
 import { authFlowErrorMessage } from "@/utils/authFlowErrors";
 
 const BLUE = "#2563EB";
